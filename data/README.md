@@ -1,14 +1,16 @@
 # Data Overview
 
-Succint overview for api data endpoints. For more information, check [https://developer-tokyochallenge.odpt.org/ja/documents#_odpt_train_api](https://developer-tokyochallenge.odpt.org/ja/documents#_odpt_train_api)(Japanese only).
+Succint overview for api data endpoints. For more information, check [developer api documentation(Japanese only)](https://developer-tokyochallenge.odpt.org/ja/documents#_odpt_train_api).
 
 Endpoint structure is as follows:
 
-> https://api-tokyochallenge.odpt.org/api/v4/datapoints/<ENDPOINT_URI>?acl:consumerKey=<API_TOKEN>
+```sh
+https://api-tokyochallenge.odpt.org/api/v4/datapoints/<ENDPOINT_URI>?acl:consumerKey=<API_TOKEN>
+````
 
 ## Common
 
-Data common to all types of transportation. For more information, check [https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9](https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9)(Japanese only).
+Data common to all types of transportation. For more information, check [developer api documentation(Japanese only)](https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9).
 
 ### odpt:Calendar
 
@@ -54,7 +56,7 @@ Sample response:
 
 ## Train
 
-Data related to railways. For more information, check [https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9_2](https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9_2)(Japanese only).
+Data related to railways. For more information, check [developer api documentation(Japanese only)](https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9_2).
 
 ### odpt:PassengerSurvey
 
@@ -342,7 +344,7 @@ Sample response:
 
 ## Bus
 
-Data related to bus lines. For more information, check [https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9_3](https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9_3)(Japanese only).
+Data related to bus lines. For more information, check [developer api documentation(Japanese only)](https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9_3).
 
 ### odpt:Bus (LIVE)
 
@@ -544,7 +546,7 @@ Sample response:
 
 ## Aircraft
 
-Data related to airlines. For more information, check [https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9_4](https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9_4)(Japanese only).
+Data related to airlines. For more information, check [developer api documentation(Japanese only)](https://developer-tokyochallenge.odpt.org/ja/documents#_%E5%AE%9A%E7%BE%A9_4).
 
 ### odpt:Airport
 
@@ -697,4 +699,4 @@ Sample response:
 
 ## File API
 
-For more information, check [https://developer-tokyochallenge.odpt.org/ja/documents#_odpt_file_api](https://developer-tokyochallenge.odpt.org/ja/documents#_odpt_file_api)(Japanese only).
+For more information, check [developer api documentation(Japanese only)](https://developer-tokyochallenge.odpt.org/ja/documents#_odpt_file_api).
