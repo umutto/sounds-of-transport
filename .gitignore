@@ -1,1 +1,9 @@
-config/*
+config.js
+
+data/config
+
+# ignore due to large file size
+data/Aircraft/*
+data/Bus/*
+data/Common/*
+data/Train/*
