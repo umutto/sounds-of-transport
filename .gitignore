@@ -7,3 +7,5 @@ data/Aircraft/*
 data/Bus/*
 data/Common/*
 data/Train/*
+
+deprecated/
