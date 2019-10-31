@@ -1,38 +1,79 @@
-import config from "../../data/config/config.js";
 import { get_push_point } from "./utils.js";
 
-$(function() {
-  var mb_token = config.mapbox.value;
-  var interactive_map = L.map("interactiveMap").setView(
-    [35.6762, 139.7503],
-    13
-  );
-  var l_renderer = L.canvas({
-    padding: 0.5,
-    tolerance: 5
-  });
-  $("#interactiveMap").data("map", interactive_map);
+const draw_map = async (map, l_renderer) => {
+  await draw_lines(map, l_renderer);
+  await draw_controls(map);
+};
 
-  L.tileLayer(
-    `https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=${mb_token}`,
-    {
-      attribution:
-        'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-      maxZoom: 18,
-      id: "mapbox.light",
-      accessToken: mb_token
-    }
-  ).addTo(interactive_map);
+const draw_controls = async map => {
+  L.easyButton({
+    id: "btn-shapes",
+    position: "topright",
+    states: [
+      {
+        stateName: "show-shape-bar",
+        onClick: function(btn, map) {
+          $("#btn-shapes").addClass("btn-active");
+          $("#shape-bar").show();
+          btn.state("hide-shape-bar");
+        },
+        title: "Display receivers",
+        icon: "fas fa-shapes"
+      },
+      {
+        stateName: "hide-shape-bar",
+        onClick: function(btn, map) {
+          $("#btn-shapes").removeClass("btn-active");
+          $("#shape-bar").hide();
+          btn.state("show-shape-bar");
+        },
+        title: "Hide receivers",
+        icon: "fas fa-shapes"
+      }
+    ]
+  }).addTo(map);
 
-  draw_lines(interactive_map, l_renderer).then(function() {
-    $(".loading-overlay").hide();
-  });
-});
+  var shape_buttons = [
+    L.easyButton({
+      id: "btn-shape-circle",
+      states: [
+        {
+          stateName: "show-shape-bar",
+          onClick: function(btn, map) {},
+          title: "Add a circle receiver",
+          icon: "fas fa-circle"
+        }
+      ]
+    }),
+    L.easyButton({
+      id: "btn-shape-square",
+      states: [
+        {
+          stateName: "show-shape-bar",
+          onClick: function(btn, map) {},
+          title: "Add a square receiver",
+          icon: "fas fa-square"
+        }
+      ]
+    }),
+    L.easyButton({
+      id: "btn-shape-triangle",
+      states: [
+        {
+          stateName: "show-shape-bar",
+          onClick: function(btn, map) {},
+          title: "Add a triangle receiver",
+          icon: "fas fa-play fa-rotate-30"
+        }
+      ]
+    })
+  ];
+
+  L.easyBar(shape_buttons, { id: "shape-bar", position: "topright" }).addTo(map);
+};
 
 const draw_lines = async (map, l_renderer) => {
   const lines = await load_data("data/Train/line_station_coords.json");
-  // const stations = await load_data("data/Train/odpt_Station.json");
-  // const lines = await load_data("data/Train/odpt_Railway.json");
 
   let _o = 0;
   var offset_pattern = [...Array(10)].map(() => {
@@ -58,10 +99,7 @@ const draw_lines = async (map, l_renderer) => {
               l2.station.some(s2 => {
                 let ns2 = l2.station.find(x2 => x2.idx === s2.idx + 1);
                 if (ns2 && ns2.trains.length > 1) {
-                  if (
-                    [s.title_en, ns.title_en].sort().join(".") ==
-                    [s2.title_en, ns2.title_en].sort().join(".")
-                  ) {
+                  if ([s.title_en, ns.title_en].sort().join(".") == [s2.title_en, ns2.title_en].sort().join(".")) {
                     _intercept = [s.title_en, ns.title_en].sort().join("->");
                     return true;
                   }
@@ -74,8 +112,7 @@ const draw_lines = async (map, l_renderer) => {
               }
             }
           });
-          let _offset =
-            offset_lines[[s.title_en, ns.title_en].sort().join("->")] || 0;
+          let _offset = offset_lines[[s.title_en, ns.title_en].sort().join("->")] || 0;
           if (_offset != 0) {
             latlngs.push(get_push_point(s, ns, offset_pattern[_offset]));
             latlngs.push(get_push_point(ns, s, offset_pattern[_offset] * -1));
@@ -156,3 +193,5 @@ const load_data = async path => {
   }
   return;
 };
+
+export { draw_map };
