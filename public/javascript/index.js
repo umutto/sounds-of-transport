@@ -1,4 +1,5 @@
-import config from "../../data/config/config.js";
+if (location.hostname == "localhost") import config from "../../data/config/config.js";
+else import config from "../../data/Public/config.js";
 import { draw_map } from "./map_control.js";
 
 $(function() {
