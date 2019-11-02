@@ -3,6 +3,19 @@ import { draw_map } from "./map_control.js";
 
 $(function() {
   init_map(config.mapbox.value, "interactiveMap");
+
+  if (window.history && window.history.pushState) {
+    $(".modal").on("show.bs.modal", function(e) {
+      if (window.location.hash != "#info") window.history.pushState("forward", null, "#info");
+    });
+    $(".modal").on("hide.bs.modal", function(e) {
+      if (window.location.hash == "#info") window.history.back();
+    });
+
+    $(window).on("popstate", function() {
+      if (window.location.hash != "#info") $(".modal").modal("hide");
+    });
+  }
 });
 
 function init_map(mb_token, map_id) {
@@ -11,7 +24,7 @@ function init_map(mb_token, map_id) {
     padding: 0.5,
     tolerance: 5
   });
-  $(`${map_id}`).data("map", interactive_map);
+  window.lf_map = interactive_map;
 
   L.tileLayer(`https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=${mb_token}`, {
     attribution:

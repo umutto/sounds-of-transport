@@ -6,6 +6,43 @@ const draw_map = async (map, l_renderer) => {
 };
 
 const draw_controls = async map => {
+  var info_buttons = [
+    L.easyButton({
+      id: "btn-info",
+      states: [
+        {
+          stateName: "show-info",
+          onClick: function(btn, map) {
+            $.ajax({
+              url: "https://api.github.com/repos/umutto/sounds-of-transport/readme",
+              headers: { Accept: "application/vnd.github.html" }
+            }).done(function(data) {
+              $("#modal-info .modal-body").html(data);
+              $("#modal-info").modal("show");
+            });
+          },
+          title: "Learn more",
+          icon: "fas fa-info-circle easy-button-large"
+        }
+      ]
+    }),
+    L.easyButton({
+      id: "btn-source",
+      states: [
+        {
+          stateName: "show-source",
+          onClick: function(btn, map) {
+            window.open("https://github.com/umutto/sounds-of-transport", "_blank");
+          },
+          title: "View source on github",
+          icon: "fab fa-github easy-button-large"
+        }
+      ]
+    })
+  ];
+
+  L.easyBar(info_buttons, { id: "info-bar", position: "bottomleft" }).addTo(map);
+
   L.easyButton({
     id: "btn-shapes",
     position: "topright",
@@ -38,7 +75,7 @@ const draw_controls = async map => {
       id: "btn-shape-circle",
       states: [
         {
-          stateName: "show-shape-bar",
+          stateName: "add-shape-circle",
           onClick: function(btn, map) {},
           title: "Add a circle receiver",
           icon: "fas fa-circle"
@@ -49,7 +86,7 @@ const draw_controls = async map => {
       id: "btn-shape-square",
       states: [
         {
-          stateName: "show-shape-bar",
+          stateName: "add-shape-square",
           onClick: function(btn, map) {},
           title: "Add a square receiver",
           icon: "fas fa-square"
@@ -60,7 +97,7 @@ const draw_controls = async map => {
       id: "btn-shape-triangle",
       states: [
         {
-          stateName: "show-shape-bar",
+          stateName: "add-shape-triangle",
           onClick: function(btn, map) {},
           title: "Add a triangle receiver",
           icon: "fas fa-play fa-rotate-30"
@@ -73,7 +110,8 @@ const draw_controls = async map => {
 };
 
 const draw_lines = async (map, l_renderer) => {
-  const lines = await load_data("data/Train/line_station_coords.json");
+  const lines = await load_data("data/Parsed/line_station_coords.json");
+  const line_color = await load_data("data/Parsed/line_colors.json");
 
   let _o = 0;
   var offset_pattern = [...Array(10)].map(() => {
@@ -91,16 +129,16 @@ const draw_lines = async (map, l_renderer) => {
     l.station.forEach(s => {
       latlngs.push([s.geo.lat, s.geo.long]);
       let ns = l.station.find(x => x.idx === s.idx + 1);
-      if (s.trains.length > 1) {
-        if (ns && ns.trains.length > 1) {
+      if (s.n_trains > 1) {
+        if (ns && ns.n_trains > 1) {
           lines.some(l2 => {
-            if (l.title_en != l2.title_en) {
+            if (l.title != l2.title) {
               let _intercept = null;
               l2.station.some(s2 => {
                 let ns2 = l2.station.find(x2 => x2.idx === s2.idx + 1);
-                if (ns2 && ns2.trains.length > 1) {
-                  if ([s.title_en, ns.title_en].sort().join(".") == [s2.title_en, ns2.title_en].sort().join(".")) {
-                    _intercept = [s.title_en, ns.title_en].sort().join("->");
+                if (ns2 && ns2.n_trains > 1) {
+                  if ([s.title, ns.title].sort().join(".") == [s2.title, ns2.title].sort().join(".")) {
+                    _intercept = [s.title, ns.title].sort().join("->");
                     return true;
                   }
                 }
@@ -112,7 +150,7 @@ const draw_lines = async (map, l_renderer) => {
               }
             }
           });
-          let _offset = offset_lines[[s.title_en, ns.title_en].sort().join("->")] || 0;
+          let _offset = offset_lines[[s.title, ns.title].sort().join("->")] || 0;
           if (_offset != 0) {
             latlngs.push(get_push_point(s, ns, offset_pattern[_offset]));
             latlngs.push(get_push_point(ns, s, offset_pattern[_offset] * -1));
@@ -120,19 +158,20 @@ const draw_lines = async (map, l_renderer) => {
         }
       }
 
-      if (!offset_stations.includes(s.title_en)) {
-        let c_radius = s.trains.length * 10 + 5;
+      if (!offset_stations.includes(s.title)) {
+        let c_radius = s.n_trains * 10 + 5;
 
         let station = L.circle([s.geo.lat, s.geo.long], {
           weight: 2,
           fillColor: "#fdfdfd",
           color: "#000",
           fillOpacity: 1,
-          radius: c_radius
+          radius: c_radius,
+          layerName: s.code
         }).addTo(stationLayer);
 
         station.on("click", function() {
-          console.log(s.title_en + " Station");
+          console.log(s.title + " Station");
         });
         station.on("mouseover", function(e) {
           e.target.setStyle({
@@ -145,20 +184,22 @@ const draw_lines = async (map, l_renderer) => {
           });
         });
 
-        offset_stations.push(s.title_en);
+        offset_stations.push(s.title);
       }
     });
 
+    let repr_color = line_color[l.code];
     var polyline = L.polyline(latlngs, {
       weight: 3,
-      color: l.repr_color,
+      color: repr_color,
       opacity: 0.7,
       className: l.code.replace(/[.:]/g, "-"),
-      renderer: l_renderer
+      renderer: l_renderer,
+      layerName: l.code
     }).addTo(lineLayer);
 
     polyline.on("click", function() {
-      console.log(l.title_en, l.title_ja, l.repr_color);
+      console.log(l.title);
     });
     polyline.on("mouseover", function(e) {
       e.target.setStyle({
@@ -171,7 +212,7 @@ const draw_lines = async (map, l_renderer) => {
       e.target.setStyle({
         weight: 3,
         opacity: 0.7,
-        color: l.repr_color
+        color: repr_color
       });
     });
   });

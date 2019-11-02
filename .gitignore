@@ -1,6 +1,4 @@
-config.js
-
-data/config
+.ipynb_checkpoints/
 
 # ignore due to large file size
 data/Aircraft/*

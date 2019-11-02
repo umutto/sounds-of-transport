@@ -23,7 +23,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
-    <script src="https://kit.fontawesome.com/f7bc5184c6.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
 
     <link
       rel="stylesheet"
@@ -39,6 +39,10 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.9.1/src/leaflet.geometryutil.js"></script>
+    <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-geodesy/v0.1.0/leaflet-geodesy.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/Leaflet-MovingMaker@0.0.1/MovingMarker.js"></script>
+    <script src="public/javascript/turf.min.js" type="module"></script> -->
 
     <link rel="stylesheet" href="public/css/style.css" />
     <script type="module" src="public/javascript/utils.js"></script>
@@ -49,6 +53,33 @@
   <body>
     <div class="container-fluid main-wrapper p-0">
       <div id="interactiveMap" class="h-100"></div>
+    </div>
+
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="modal-info"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modal-info-title"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modal-info-title">What is Sounds of Transport?</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            It is a good thing
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="loading-overlay">
