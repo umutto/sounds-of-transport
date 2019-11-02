@@ -9,6 +9,6 @@ export default {
     token_url: "https://developer-tokyochallenge.odpt.org/oauth/applications?locale=en"
   },
   mapbox: {
-    value: "pk.eyJ1IjoidW11dGthcmFrdWxhayIsImEiOiJjazJodGU5bjIwYTh4M2xva3c3bG1td3pwIn0.IHAgUWfELpMaK41JZvz1qg"
+    value: "pk.eyJ1IjoidW11dGthcmFrdWxhayIsImEiOiJjazJodGUybGYwOTZoM2hudjZ3Ynkyeng0In0.9qQvJ0UVaZNn9arVSXk9Kg"
   }
 };
