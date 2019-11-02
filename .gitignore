@@ -1,9 +1,9 @@
-config.js
-
-data/config
+.ipynb_checkpoints/
 
 # ignore due to large file size
 data/Aircraft/*
 data/Bus/*
 data/Common/*
 data/Train/*
+
+deprecated/

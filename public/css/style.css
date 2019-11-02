@@ -1,7 +1,7 @@
 html,
 body {
-    margin: 0px;
-    padding: 0px;
+  margin: 0px;
+  padding: 0px;
 }
 
 /* .main-wrapper {
@@ -9,9 +9,63 @@ body {
 } */
 
 #interactiveMap {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.loading-overlay {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  z-index: 10001;
+  background-color: rgba(0, 0, 0, 0.5);
+  top: 0;
+  left: 0;
+  overflow-x: hidden;
+}
+
+.loading-overlay-content {
+  position: relative;
+  top: 25%;
+  width: 100%;
+  text-align: center;
+  margin-top: 30px;
+}
+
+.loading-overlay .spinner-border {
+  width: 10em !important;
+  height: 10em !important;
+}
+
+.loading-overlay .spinner-text {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.btn-active {
+  color: #f4f4f4 !important;
+  background-color: #4a4343 !important;
+}
+
+.fa-rotate-30 {
+  -webkit-transform: rotate(30deg);
+  -moz-transform: rotate(30deg);
+  -ms-transform: rotate(30deg);
+  -o-transform: rotate(30deg);
+  transform: rotate(30deg);
+}
+
+#shape-bar {
+  display: none;
+}
+
+.leaflet-bar button,
+.leaflet-bar a {
+  height: 46px !important;
+  width: 46px !important;
+  line-height: 46px !important;
+  font-size: 1.25rem !important;
 }
