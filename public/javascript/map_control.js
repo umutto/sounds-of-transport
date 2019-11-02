@@ -110,8 +110,8 @@ const draw_controls = async map => {
 };
 
 const draw_lines = async (map, l_renderer) => {
-  const lines = await load_data("data/Parsed/line_station_coords.json");
-  const line_color = await load_data("data/Parsed/line_colors.json");
+  const lines = await load_data("data/Public/line_station_coords.json");
+  const line_color = await load_data("data/Public/line_colors.json");
 
   let _o = 0;
   var offset_pattern = [...Array(10)].map(() => {
