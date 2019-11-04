@@ -69,3 +69,8 @@ body {
   line-height: 46px !important;
   font-size: 1.25rem !important;
 }
+
+.train-icon {
+  background: #fff;
+  border: 1px solid #666;
+}

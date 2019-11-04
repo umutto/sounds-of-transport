@@ -5,7 +5,8 @@ export default {
     key: "DefaultApplication",
     pre: "acl:consumerKey=",
     value: "620ebb7c8bc13f982014fc2e69e856644f045897a5343175e929d86a82013cdb",
-    api_url: "https://developer-tokyochallenge.odpt.org/ja/documents#_odpt_train_api",
+    api_url: "https://api-tokyochallenge.odpt.org/api/v4/",
+    api_doc_url: "https://developer-tokyochallenge.odpt.org/ja/documents#_odpt_train_api",
     token_url: "https://developer-tokyochallenge.odpt.org/oauth/applications?locale=en"
   },
   mapbox: {
