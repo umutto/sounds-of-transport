@@ -1,9 +1,4 @@
-import { get_push_point } from "./utils.js";
-
-const draw_map = async (map, l_renderer) => {
-  await draw_lines(map, l_renderer);
-  await draw_controls(map);
-};
+import { get_push_point, interpolatePosition } from "./utils.js";
 
 const draw_controls = async map => {
   var info_buttons = [
@@ -109,9 +104,12 @@ const draw_controls = async map => {
   L.easyBar(shape_buttons, { id: "shape-bar", position: "topright" }).addTo(map);
 };
 
-const draw_lines = async (map, l_renderer) => {
-  const lines = await load_data("data/Public/line_station_coords.json");
-  const line_color = await load_data("data/Public/line_colors.json");
+const draw_lines = async (map, l_renderer, data) => {
+  var lines = data.lines;
+  var line_color = data.line_colors;
+
+  // limit lines due to frequend api calls
+  lines = lines.filter(l => l.station.length > 10);
 
   let _o = 0;
   var offset_pattern = [...Array(10)].map(() => {
@@ -119,24 +117,31 @@ const draw_lines = async (map, l_renderer) => {
     return _o;
   });
   let offset_lines = {};
-  let offset_stations = [];
 
+  var lineref = {};
+  var stationref = {};
   let lineLayer = L.featureGroup();
   let stationLayer = L.featureGroup();
 
+  // let offset_stations = [];
+  // let station_groups = {};
+  // let combinedStationLayer = L.featureGroup();
+
   lines.forEach(l => {
     let latlngs = [];
+    let line_stations = [];
     l.station.forEach(s => {
       latlngs.push([s.geo.lat, s.geo.long]);
+      line_stations.push(s.code);
       let ns = l.station.find(x => x.idx === s.idx + 1);
-      if (s.n_trains > 1) {
-        if (ns && ns.n_trains > 1) {
+      if (s.trains.length > 1) {
+        if (ns && ns.trains.length > 1) {
           lines.some(l2 => {
             if (l.title != l2.title) {
               let _intercept = null;
               l2.station.some(s2 => {
                 let ns2 = l2.station.find(x2 => x2.idx === s2.idx + 1);
-                if (ns2 && ns2.n_trains > 1) {
+                if (ns2 && ns2.trains.length > 1) {
                   if ([s.title, ns.title].sort().join(".") == [s2.title, ns2.title].sort().join(".")) {
                     _intercept = [s.title, ns.title].sort().join("->");
                     return true;
@@ -158,34 +163,39 @@ const draw_lines = async (map, l_renderer) => {
         }
       }
 
-      if (!offset_stations.includes(s.title)) {
-        let c_radius = s.n_trains * 10 + 5;
+      // if (!offset_stations.includes(s.title)) {
+      let c_radius = s.trains.length * 10 + 5;
 
-        let station = L.circle([s.geo.lat, s.geo.long], {
-          weight: 2,
-          fillColor: "#fdfdfd",
-          color: "#000",
-          fillOpacity: 1,
-          radius: c_radius,
-          layerName: s.code
-        }).addTo(stationLayer);
+      let station = L.circle([s.geo.lat, s.geo.long], {
+        parts: 4,
+        weight: 2,
+        fillColor: "#fdfdfd",
+        color: "#000",
+        fillOpacity: 1,
+        radius: c_radius,
+        layerName: s.code,
+        duration: s.dur
+      }).addTo(stationLayer);
 
-        station.on("click", function() {
-          console.log(s.title + " Station");
-        });
-        station.on("mouseover", function(e) {
-          e.target.setStyle({
-            weight: 5
-          });
-        });
-        station.on("mouseout", function(e) {
-          e.target.setStyle({
-            weight: 2
-          });
-        });
+      // station_groups[s.title] = [...(station_groups[s.title] || []), { s: station, ns: ns }];
+      stationref[s.code] = station;
 
-        offset_stations.push(s.title);
-      }
+      station.on("click", function() {
+        console.log(s.title + " Station");
+      });
+      station.on("mouseover", function(e) {
+        e.target.setStyle({
+          weight: 5
+        });
+      });
+      station.on("mouseout", function(e) {
+        e.target.setStyle({
+          weight: 2
+        });
+      });
+
+      //   offset_stations.push(s.title);
+      // }
     });
 
     let repr_color = line_color[l.code];
@@ -195,8 +205,11 @@ const draw_lines = async (map, l_renderer) => {
       opacity: 0.7,
       className: l.code.replace(/[.:]/g, "-"),
       renderer: l_renderer,
-      layerName: l.code
+      layerName: l.code,
+      stations: line_stations
     }).addTo(lineLayer);
+
+    lineref[l.code] = polyline;
 
     polyline.on("click", function() {
       console.log(l.title);
@@ -219,20 +232,88 @@ const draw_lines = async (map, l_renderer) => {
   lineLayer.addTo(map);
   lineLayer.bringToBack();
 
+  // Object.entries(station_groups).forEach(([k, v]) => {
+  //   L.geoJSON(turf.envelope(...v.map(s => s.toGeoJSON())), {
+  //     style: {
+  //       fillColor: "#fdfdfd",
+  //       color: "#000",
+  //       opacity: 1,
+  //       fillOpacity: 1,
+  //       layerName: k
+  //     }
+  //   }).addTo(combinedStationLayer);
+  // });
+  // combinedStationLayer.addTo(map);
+  // combinedStationLayer.bringToFront();
+
   stationLayer.addTo(map);
   stationLayer.bringToFront();
+
+  window.lineref = lineref;
+  window.stationref = stationref;
 };
 
-const load_data = async path => {
-  let result;
+const draw_trains = async (map, l_renderer, data) => {
+  var time_now = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  time_now = time_now < "03:00" ? parseInt(time_now.split(":")[0]) + 24 + ":" + time_now.split(":")[1] : time_now;
 
-  try {
-    result = await $.getJSON(path);
-    return result;
-  } catch (error) {
-    console.error(error);
-  }
-  return;
+  let train_layer = L.featureGroup();
+  var trainRef = window.trainRef || {};
+
+  Object.entries(data).forEach(([k, v]) => {
+    var train = window.lineref[k];
+    v.filter(t => t.int[0] < time_now && time_now < t.int[1]).forEach(vt => {
+      let from_index = vt.tt
+        .filter(tt => time_now > (tt.t < "03:00" ? parseInt(tt.t.split(":")[0]) + 24 + ":" + tt.t.split(":")[1] : tt.t))
+        .slice(-1)
+        .pop();
+
+      if (from_index)
+        if (from_index.i >= vt.tt.length - 1) {
+          // remove train marker and trainRef
+        } else {
+          let from_station = window.stationref[train.options.stations[from_index.i]];
+          let to_station = window.stationref[train.options.stations[from_index.i + 1]];
+
+          let ft = new Date();
+          ft.setHours(parseInt(from_index.t.split(":")[0]) % 24);
+          ft.setMinutes(parseInt(from_index.t.split(":")[1]));
+          ft.setSeconds(0);
+
+          let elapsed_time = new Date(new Date() - ft);
+          elapsed_time = elapsed_time.getMinutes() * 60 + elapsed_time.getSeconds();
+
+          var line = L.polyline([
+              interpolatePosition(
+                from_station.getLatLng(),
+                to_station.getLatLng(),
+                elapsed_time / from_station.options.duration
+              ),
+              to_station.getLatLng()
+            ]),
+            animatedMarker = L.animatedMarker(line.getLatLngs(), {
+              icon: L.divIcon({
+                className: "train-icon",
+                interval: Math.max(0, from_station.options.duration - elapsed_time) * 1000
+              })
+            });
+          animatedMarker.on("add", function() {
+            console.log("added");
+          });
+
+          setTimeout(function() {
+            train_layer.addLayer(animatedMarker);
+          }, 1000);
+        }
+
+      // console.log(train);
+    });
+  });
+
+  window.trainRef = trainRef;
+
+  train_layer.addTo(map);
+  train_layer.bringToFront();
 };
 
-export { draw_map };
+export { draw_lines, draw_controls, draw_trains };
