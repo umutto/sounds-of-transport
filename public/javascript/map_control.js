@@ -38,6 +38,41 @@ const draw_controls = async map => {
 
   L.easyBar(info_buttons, { id: "info-bar", position: "bottomleft" }).addTo(map);
 
+  // TODO: only enabled when it's not live mode, when it's live mode set window.speed_offset to 1
+  var playback_buttons = [
+    L.easyButton({
+      id: "btn-play",
+      states: [
+        {
+          stateName: "speed-normal",
+          onClick: function(btn, map) {
+            // TODO: loop through all trainref objects and set their duration to original
+            // also set window.speed_offset to 1
+          },
+          title: "Play normal speed",
+          icon: "fas fa-play easy-button-large"
+        }
+      ]
+    }),
+    L.easyButton({
+      id: "btn-faster",
+      states: [
+        {
+          stateName: "speed-faster",
+          onClick: function(btn, map) {
+            // TODO: loop through all trainref objects and set their duration to *=10
+            // also set window.speed_offset to *=10
+          },
+          title: "10x Faster",
+          icon: "fas fa-forward easy-button-large"
+        }
+      ]
+    })
+  ];
+
+  L.easyBar(playback_buttons, { id: "playback-bar", position: "bottomright" }).addTo(map);
+  $("#playback-bar").addClass("row");
+
   L.easyButton({
     id: "btn-shapes",
     position: "topright",
@@ -173,8 +208,8 @@ const draw_lines = async (map, l_renderer, data) => {
         color: "#000",
         fillOpacity: 1,
         radius: c_radius,
-        layerName: s.code,
-        duration: s.dur
+        meta_name: s.code,
+        meta_duration: s.dur
       }).addTo(stationLayer);
 
       // station_groups[s.title] = [...(station_groups[s.title] || []), { s: station, ns: ns }];
@@ -205,8 +240,8 @@ const draw_lines = async (map, l_renderer, data) => {
       opacity: 0.7,
       className: l.code.replace(/[.:]/g, "-"),
       renderer: l_renderer,
-      layerName: l.code,
-      stations: line_stations
+      meta_name: l.code,
+      meta_stations: line_stations
     }).addTo(lineLayer);
 
     lineref[l.code] = polyline;
@@ -239,7 +274,7 @@ const draw_lines = async (map, l_renderer, data) => {
   //       color: "#000",
   //       opacity: 1,
   //       fillOpacity: 1,
-  //       layerName: k
+  //       meta_name: k
   //     }
   //   }).addTo(combinedStationLayer);
   // });
@@ -253,64 +288,114 @@ const draw_lines = async (map, l_renderer, data) => {
   window.stationref = stationref;
 };
 
-const draw_trains = async (map, l_renderer, data) => {
+const draw_trains = async (map, data) => {
   var time_now = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   time_now = time_now < "03:00" ? parseInt(time_now.split(":")[0]) + 24 + ":" + time_now.split(":")[1] : time_now;
 
+  // ///////////////////////////////////////
+  // ///////////////////////////////////////
+
+  // var d = new Date();
+  // d.setHours(d.getHours() - 2);
+  // time_now = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+  // ///////////////////////////////////////
+  // ///////////////////////////////////////
+
   let train_layer = L.featureGroup();
-  var trainRef = window.trainRef || {};
+  var trainref = window.trainref || {};
 
   Object.entries(data).forEach(([k, v]) => {
     var train = window.lineref[k];
     v.filter(t => t.int[0] < time_now && time_now < t.int[1]).forEach(vt => {
-      let from_index = vt.tt
-        .filter(tt => time_now > (tt.t < "03:00" ? parseInt(tt.t.split(":")[0]) + 24 + ":" + tt.t.split(":")[1] : tt.t))
-        .slice(-1)
-        .pop();
+      if (!(vt.n in trainref)) {
+        let s_index = vt.tt.findIndex(
+          tt => time_now < (tt.t < "03:00" ? parseInt(tt.t.split(":")[0]) + 24 + ":" + tt.t.split(":")[1] : tt.t)
+        );
+        let from_index = vt.tt[s_index - 1],
+          to_index = vt.tt[s_index];
 
-      if (from_index)
-        if (from_index.i >= vt.tt.length - 1) {
-          // remove train marker and trainRef
-        } else {
-          let from_station = window.stationref[train.options.stations[from_index.i]];
-          let to_station = window.stationref[train.options.stations[from_index.i + 1]];
+        if (from_index && to_index)
+          if (from_index.i >= to_index.i && vt.n in trainref) {
+            delete trainref[vt.n];
+          } else {
+            let from_station = window.stationref[train.options.meta_stations[from_index.i - 1]];
+            let to_station = window.stationref[train.options.meta_stations[to_index.i - 1]];
 
-          let ft = new Date();
-          ft.setHours(parseInt(from_index.t.split(":")[0]) % 24);
-          ft.setMinutes(parseInt(from_index.t.split(":")[1]));
-          ft.setSeconds(0);
+            let ft = new Date();
+            ft.setHours(parseInt(from_index.t.split(":")[0]) % 24);
+            ft.setMinutes(parseInt(from_index.t.split(":")[1]));
+            ft.setSeconds(0);
 
-          let elapsed_time = new Date(new Date() - ft);
-          elapsed_time = elapsed_time.getMinutes() * 60 + elapsed_time.getSeconds();
+            let elapsed_time = new Date(new Date() - ft);
+            elapsed_time = elapsed_time.getMinutes() * 60 + elapsed_time.getSeconds();
 
-          var line = L.polyline([
-              interpolatePosition(
-                from_station.getLatLng(),
-                to_station.getLatLng(),
-                elapsed_time / from_station.options.duration
-              ),
-              to_station.getLatLng()
-            ]),
-            animatedMarker = L.animatedMarker(line.getLatLngs(), {
-              icon: L.divIcon({
-                className: "train-icon",
-                interval: Math.max(0, from_station.options.duration - elapsed_time) * 1000
-              })
+            var animatedMarker = L.motion.polyline(
+              [
+                interpolatePosition(
+                  from_station.getLatLng(),
+                  to_station.getLatLng(),
+                  elapsed_time / from_station.options.meta_duration
+                ),
+                to_station.getLatLng()
+              ],
+              {
+                meta_idx: s_index - 1,
+                meta_timetable: vt.tt,
+                meta_name: vt.n,
+                weight: 0
+              },
+              {
+                auto: true,
+                duration: (Math.max(0, from_station.options.meta_duration - elapsed_time) * 1000) / window.speed_offset,
+                easing: L.Motion.Ease.easeInOutSine
+              },
+              {
+                showMarker: true,
+                riseOnHover: true,
+                title: k + " - " + vt.n,
+                alt: k + " - " + vt.n,
+                icon: L.divIcon({
+                  className: "train-icon"
+                })
+              }
+            );
+
+            animatedMarker.addTo(train_layer);
+            animatedMarker.on(L.Motion.Event.Ended, function(e) {
+              this.options.meta_idx += 1;
+
+              if (this.options.meta_idx < this.options.meta_timetable.length) {
+                let n_from_station =
+                    window.stationref[
+                      train.options.meta_stations[this.options.meta_timetable[this.options.meta_idx - 1].i - 1]
+                    ],
+                  n_to_station =
+                    window.stationref[
+                      train.options.meta_stations[this.options.meta_timetable[this.options.meta_idx].i - 1]
+                    ];
+
+                this.motionDuration((n_from_station.options.meta_duration * 1000) / window.speed_offset);
+                this._linePoints.shift();
+                this.addLatLng(n_to_station.getLatLng());
+                this.motionStart();
+              } else {
+                this.getMarker().remove();
+                this._renderer._removePath(this);
+                delete this.getMarker();
+                delete this;
+                delete trainref[this.options.meta_name];
+              }
             });
-          animatedMarker.on("add", function() {
-            console.log("added");
-          });
 
-          setTimeout(function() {
+            trainref[vt.n] = animatedMarker;
             train_layer.addLayer(animatedMarker);
-          }, 1000);
-        }
-
-      // console.log(train);
+          }
+      }
     });
   });
 
-  window.trainRef = trainRef;
+  window.trainref = trainref;
 
   train_layer.addTo(map);
   train_layer.bringToFront();
