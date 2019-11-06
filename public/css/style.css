@@ -74,3 +74,11 @@ body {
   background: #fff;
   border: 1px solid #666;
 }
+
+.leaflet-bar.row > button:first-of-type {
+  border-right: 1px solid #ccc !important;
+  border-bottom: none !important;
+}
+.leaflet-bar.row > button:first-of-type {
+  border-bottom: 1px solid #ccc !important;
+}
