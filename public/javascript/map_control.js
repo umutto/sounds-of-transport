@@ -238,6 +238,7 @@ const register_map_events = map => {
           meta_volume: 100,
           meta_audio: "snare_1"
         }).setContent($("#polyline-popup").html());
+        layer.bindPopup(popup);
 
         layer.options.meta_trigger = false;
         layer.options.meta_fun = function() {
@@ -418,15 +419,15 @@ const draw_trains = async (map, data) => {
   var time_now = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   time_now = time_now < "03:00" ? parseInt(time_now.split(":")[0]) + 24 + ":" + time_now.split(":")[1] : time_now;
 
-  ///////////////////////////////////////
-  ///////////////////////////////////////
+  // ///////////////////////////////////////
+  // ///////////////////////////////////////
 
-  var d = new Date();
-  d.setHours(d.getHours() - 6);
-  time_now = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  // var d = new Date();
+  // d.setHours(d.getHours() - 6);
+  // time_now = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
-  ///////////////////////////////////////
-  ///////////////////////////////////////
+  // ///////////////////////////////////////
+  // ///////////////////////////////////////
 
   var train_layer = window.train_layer || L.featureGroup();
   var trainref = window.trainref || {};
