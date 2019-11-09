@@ -1,4 +1,5 @@
 import { get_push_point, interpolatePosition } from "./utils.js";
+import { audio_lib, inject_dom } from "./sound_controller.js";
 
 const draw_controls = async map => {
   var info_buttons = [
@@ -36,107 +37,232 @@ const draw_controls = async map => {
     })
   ];
 
-  L.easyBar(info_buttons, { id: "info-bar", position: "bottomleft" }).addTo(map);
+  L.easyBar(info_buttons, { id: "info-bar", position: "topright" }).addTo(map);
 
-  // TODO: only enabled when it's not live mode, when it's live mode set window.speed_offset to 1
-  var playback_buttons = [
-    L.easyButton({
-      id: "btn-play",
-      states: [
-        {
-          stateName: "speed-normal",
-          onClick: function(btn, map) {
-            // TODO: loop through all trainref objects and set their duration to original
-            // also set window.speed_offset to 1
-          },
-          title: "Play normal speed",
-          icon: "fas fa-play easy-button-large"
-        }
-      ]
-    }),
-    L.easyButton({
-      id: "btn-faster",
-      states: [
-        {
-          stateName: "speed-faster",
-          onClick: function(btn, map) {
-            // TODO: loop through all trainref objects and set their duration to *=10
-            // also set window.speed_offset to *=10
-          },
-          title: "10x Faster",
-          icon: "fas fa-forward easy-button-large"
-        }
-      ]
-    })
-  ];
-
-  L.easyBar(playback_buttons, { id: "playback-bar", position: "bottomright" }).addTo(map);
-  $("#playback-bar").addClass("row");
-
-  L.easyButton({
-    id: "btn-shapes",
-    position: "topright",
+  // TODO: only enabled when it's not live mode, when it's live mode don't care about window.speed_offset, use 1
+  var btn_play = L.easyButton({
+    id: "btn-play",
     states: [
       {
-        stateName: "show-shape-bar",
+        stateName: "enabled",
         onClick: function(btn, map) {
-          $("#btn-shapes").addClass("btn-active");
-          $("#shape-bar").show();
-          btn.state("hide-shape-bar");
+          window.speed_offset = 1;
+          Object.values(window.trainref).forEach(t => {
+            if (t) t.motionDuration(t.motionOptions.duration / window.speed_offset);
+          });
+          window.buttonref.btn_faster.enable();
         },
-        title: "Display receivers",
-        icon: "fas fa-shapes"
-      },
-      {
-        stateName: "hide-shape-bar",
-        onClick: function(btn, map) {
-          $("#btn-shapes").removeClass("btn-active");
-          $("#shape-bar").hide();
-          btn.state("show-shape-bar");
-        },
-        title: "Hide receivers",
-        icon: "fas fa-shapes"
+        title: "Play normal speed",
+        icon: "fas fa-play easy-button-large"
       }
     ]
+  });
+  var btn_faster = L.easyButton({
+    id: "btn-faster",
+    states: [
+      {
+        stateName: "enabled",
+        onClick: function(btn, map) {
+          window.speed_offset = Math.min(1000, window.speed_offset * 10);
+          Object.values(window.trainref).forEach(t => {
+            if (t) t.motionDuration(t.motionOptions.duration / window.speed_offset);
+          });
+          if (window.speed_offset == 1000) btn.disable();
+        },
+        title: "10x Faster",
+        icon: "fas fa-forward easy-button-large"
+      }
+    ]
+  });
+
+  L.easyBar([btn_play, btn_faster], { id: "playback-bar", position: "bottomright" }).addTo(map);
+  $("#playback-bar").addClass("row");
+
+  window.buttonref = { btn_play, btn_faster };
+  register_map_events(map);
+};
+
+const register_map_events = map => {
+  window.receiverref = [];
+  var editableLayers = new L.FeatureGroup();
+  map.addLayer(editableLayers);
+
+  L.drawLocal.draw.toolbar.buttons.circle = "Draw a continuous receiver circle.";
+  L.drawLocal.draw.toolbar.buttons.rectangle = "Draw a periodic receiver rectangle.";
+  L.drawLocal.draw.toolbar.buttons.polyline = "Draw a single activation receiver polyline.";
+
+  $("body").on("input", ".form-control", function() {
+    window.popupTarget.options[$(this).data("handle")] = $(this).val();
+    $(this)
+      .siblings("label")
+      .find("span span")
+      .text($(this).val());
+  });
+
+  map.on("popupopen", function(e) {
+    var popup = e.popup;
+    var content = popup.getContent();
+    var $div = $("<div>").html(content);
+
+    Object.entries(popup.options).forEach(([k, v]) => {
+      let _elem = $div.find(`.form-control[data-handle=${k}]`);
+      if (_elem.is("input")) {
+        _elem.attr("value", v);
+        _elem
+          .siblings("label")
+          .find("span span")
+          .text(v);
+      } else if (_elem.is("select")) {
+        _elem.find(`option`).attr("selected", false);
+        _elem.find(`option[value='${v}']`).attr("selected", true);
+      }
+    });
+
+    popup.setContent($div.html());
+    window.popupTarget = popup;
+  });
+  map.on("popupclose", function(e) {
+    window.popupTarget = null;
+  });
+
+  new L.Control.Draw({
+    draw: {
+      circle: {
+        shapeOptions: {
+          color: "#bc4873"
+        }
+      },
+      rectangle: {
+        shapeOptions: {
+          color: "#1f6650"
+        }
+      },
+      polyline: {
+        shapeOptions: {
+          color: "#110133",
+          weight: 10
+        }
+      },
+      polygon: false,
+      marker: false
+    },
+    undo: {
+      title: "Delete last point drawn",
+      text: "Delete last point"
+    },
+    edit: {
+      featureGroup: editableLayers,
+      remove: true
+    }
   }).addTo(map);
 
-  var shape_buttons = [
-    L.easyButton({
-      id: "btn-shape-circle",
-      states: [
-        {
-          stateName: "add-shape-circle",
-          onClick: function(btn, map) {},
-          title: "Add a circle receiver",
-          icon: "fas fa-circle"
-        }
-      ]
-    }),
-    L.easyButton({
-      id: "btn-shape-square",
-      states: [
-        {
-          stateName: "add-shape-square",
-          onClick: function(btn, map) {},
-          title: "Add a square receiver",
-          icon: "fas fa-square"
-        }
-      ]
-    }),
-    L.easyButton({
-      id: "btn-shape-triangle",
-      states: [
-        {
-          stateName: "add-shape-triangle",
-          onClick: function(btn, map) {},
-          title: "Add a triangle receiver",
-          icon: "fas fa-play fa-rotate-30"
-        }
-      ]
-    })
-  ];
+  map.on(L.Draw.Event.CREATED, function(e) {
+    var type = e.layerType,
+      layer = e.layer;
+    window.receiverref.push(layer);
+    editableLayers.addLayer(layer);
 
-  L.easyBar(shape_buttons, { id: "shape-bar", position: "topright" }).addTo(map);
+    switch (type) {
+      case "circle":
+        var popup = L.popup({
+          meta_volume: 100,
+          meta_audio: "jazz_1"
+        }).setContent($("#circle-popup").html());
+        layer.bindPopup(popup);
+
+        layer.options.meta_trigger = false;
+        layer.options.meta_fun = function() {
+          var radius = layer.getRadius();
+          var circleCenterPoint = layer.getLatLng();
+
+          let _intersect = Object.entries(window.trainref).some(([k, v]) => {
+            return v && Math.abs(circleCenterPoint.distanceTo(v.getMarker().getLatLng())) <= radius;
+          });
+          let _triggered = layer.options.meta_trigger;
+
+          if (_intersect && !_triggered) {
+            if (!layer.getPopup().options.meta_element)
+              inject_dom(
+                `audio_${layer._leaflet_id}`,
+                audio_lib[layer.getPopup().options.meta_audio],
+                true,
+                layer.getPopup().options.meta_volume
+              );
+            else
+              $(`#${layer.getPopup().options.meta_element}`)
+                .get(0)
+                .play();
+
+            $(layer.getElement()).addClass("pulse");
+            layer.options.meta_trigger = true;
+            layer.getPopup().options.meta_element = `audio_${layer._leaflet_id}`;
+          } else if (!_intersect && _triggered) {
+            if (layer.getPopup().options.meta_element) {
+              let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+              audio_elem.pause();
+              // audio_elem.currentTime = 0;
+            }
+
+            $(layer.getElement()).removeClass("pulse");
+            layer.options.meta_trigger = false;
+          }
+        };
+        break;
+      case "rectangle":
+        var popup = L.popup({
+          meta_volume: 100,
+          meta_audio: "kick_drum_1",
+          meta_interval: 1
+        }).setContent($("#rectangle-popup").html());
+        layer.bindPopup(popup);
+
+        // $(layer.getElement()).addClass("sleeper");
+        layer.options.meta_trigger = false;
+        layer.options.meta_fun = function() {
+          let _intersect = Object.entries(window.trainref).some(([k, v]) => {
+            return v && layer.getBounds().contains(v.getMarker().getLatLng());
+          });
+          let _triggered = layer.options.meta_trigger;
+
+          if (_intersect && !_triggered) {
+            $(layer.getElement()).addClass("drawing");
+            layer.options.meta_trigger = true;
+          } else if (!_intersect && _triggered) {
+            $(layer.getElement()).removeClass("drawing");
+            layer.options.meta_trigger = false;
+          }
+        };
+        break;
+      case "polyline":
+        var popup = L.popup({
+          meta_volume: 100,
+          meta_audio: "snare_1"
+        }).setContent($("#polyline-popup").html());
+
+        layer.options.meta_trigger = false;
+        layer.options.meta_fun = function() {
+          let _intersect = Object.entries(window.trainref).some(([k, v]) => {
+            return v && true;
+          });
+          let _triggered = layer.options.meta_trigger;
+
+          if (_intersect && !_triggered) {
+            $(layer.getElement()).addClass("stress");
+            layer.options.meta_trigger = true;
+          } else if (!_intersect && _triggered) {
+            $(layer.getElement()).removeClass("stress");
+            layer.options.meta_trigger = false;
+          }
+        };
+        break;
+      default:
+        break;
+    }
+  });
+
+  window.setInterval(function() {
+    Object.values(window.receiverref).forEach(rec => rec.options.meta_fun());
+  }, 25);
 };
 
 const draw_lines = async (map, l_renderer, data) => {
@@ -292,33 +418,32 @@ const draw_trains = async (map, data) => {
   var time_now = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   time_now = time_now < "03:00" ? parseInt(time_now.split(":")[0]) + 24 + ":" + time_now.split(":")[1] : time_now;
 
-  // ///////////////////////////////////////
-  // ///////////////////////////////////////
+  ///////////////////////////////////////
+  ///////////////////////////////////////
 
-  // var d = new Date();
-  // d.setHours(d.getHours() - 2);
-  // time_now = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  var d = new Date();
+  d.setHours(d.getHours() - 6);
+  time_now = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
-  // ///////////////////////////////////////
-  // ///////////////////////////////////////
+  ///////////////////////////////////////
+  ///////////////////////////////////////
 
-  let train_layer = L.featureGroup();
+  var train_layer = window.train_layer || L.featureGroup();
   var trainref = window.trainref || {};
 
-  Object.entries(data).forEach(([k, v]) => {
-    var train = window.lineref[k];
-    v.filter(t => t.int[0] < time_now && time_now < t.int[1]).forEach(vt => {
-      if (!(vt.n in trainref)) {
-        let s_index = vt.tt.findIndex(
-          tt => time_now < (tt.t < "03:00" ? parseInt(tt.t.split(":")[0]) + 24 + ":" + tt.t.split(":")[1] : tt.t)
-        );
-        let from_index = vt.tt[s_index - 1],
-          to_index = vt.tt[s_index];
+  Object.entries(data)
+    .filter(([k, _]) => k in window.lineref)
+    .forEach(([k, v]) => {
+      var train = window.lineref[k];
+      v.filter(t => t.int[0] < time_now && time_now < t.int[1]).forEach(vt => {
+        if (!(vt.n in trainref)) {
+          let s_index = vt.tt.findIndex(
+            tt => time_now < (tt.t < "03:00" ? parseInt(tt.t.split(":")[0]) + 24 + ":" + tt.t.split(":")[1] : tt.t)
+          );
+          let from_index = vt.tt[s_index - 1],
+            to_index = vt.tt[s_index];
 
-        if (from_index && to_index)
-          if (from_index.i >= to_index.i && vt.n in trainref) {
-            delete trainref[vt.n];
-          } else {
+          if (from_index && to_index) {
             let from_station = window.stationref[train.options.meta_stations[from_index.i - 1]];
             let to_station = window.stationref[train.options.meta_stations[to_index.i - 1]];
 
@@ -356,7 +481,8 @@ const draw_trains = async (map, data) => {
                 title: k + " - " + vt.n,
                 alt: k + " - " + vt.n,
                 icon: L.divIcon({
-                  className: "train-icon"
+                  className: "train-icon",
+                  html: `<div style="background: ${train.options.color}"></div>`
                 })
               }
             );
@@ -384,21 +510,23 @@ const draw_trains = async (map, data) => {
                 this._renderer._removePath(this);
                 delete this.getMarker();
                 delete this;
-                delete trainref[this.options.meta_name];
+                // delete trainref[this.options.meta_name];
+                trainref[this.options.meta_name] = null;
               }
             });
 
             trainref[vt.n] = animatedMarker;
             train_layer.addLayer(animatedMarker);
           }
-      }
+        }
+      });
     });
-  });
-
-  window.trainref = trainref;
 
   train_layer.addTo(map);
   train_layer.bringToFront();
+
+  window.trainref = trainref;
+  window.train_layer = train_layer;
 };
 
 export { draw_lines, draw_controls, draw_trains };

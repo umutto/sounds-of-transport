@@ -38,16 +38,16 @@
     ></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.9.1/src/leaflet.geometryutil.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.AnimatedMarker/1.0.0/AnimatedMarker.min.js"></script> -->
     <script src="public/javascript/leaflet.motion.min.js"></script>
 
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js"></script> -->
     <script src="https://cdn.rawgit.com/osamutake/japanese-holidays-js/v1.0.9/lib/japanese-holidays.min.js"></script>
 
     <link rel="stylesheet" href="public/css/style.css" />
     <script type="module" src="public/javascript/utils.js"></script>
+    <script type="module" src="public/javascript/sound_controller.js"></script>
     <script type="module" src="public/javascript/data_handler.js"></script>
     <script type="module" src="public/javascript/map_control.js"></script>
     <script type="module" src="public/javascript/index.js"></script>
@@ -57,6 +57,8 @@
     <div class="container-fluid main-wrapper p-0">
       <div id="interactiveMap" class="h-100"></div>
     </div>
+
+    <div id="audio-wrapper"></div>
 
     <!-- Modal -->
     <div
@@ -91,6 +93,129 @@
           <span class="sr-only">Loading...</span>
         </div>
         <h1 class="spinner-text text-light">Loading...</h1>
+      </div>
+    </div>
+    <div>
+      <div id="circle-popup" class="d-none">
+        <div>
+          <div class="p-1 px-3 m-1 font-weight-bold border-bottom text-center">
+            😮 A circle receiver control plays continuously when triggered!
+          </div>
+          <div class="form-group">
+            <label for="volume-slider">Volume<span class="px-1">(<span>100</span>%)</span></label>
+            <input
+              type="range"
+              class="custom-range form-control"
+              id="volume-slider"
+              min="0"
+              max="100"
+              step="5"
+              value="100"
+              data-handle="meta_volume"
+            />
+          </div>
+          <div class="form-group">
+            <label for="sample-select">Select sample</label>
+            <select class="form-control" id="sample-select" data-handle="meta_audio">
+              <option value="kick_1">Kick drum</option>
+              <option value="snare_1">Snare</option>
+              <option value="hi_hat_1">Hi-hat (Closed)</option>
+              <option value="hi_hat_2">Hi-Hat (Open)</option>
+              <option value="groovy_1">Groovy riff</option>
+              <option value="funk_1">Funky riff</option>
+              <option value="funk_2">Funky riff(2)</option>
+              <option value="jazz_1" selected>Jazz riff</option>
+              <option value="jazz_2">Jazz riff(2)</option>
+              <option value="metal_1">Metal riff</option>
+              <option value="metal_2">Metal riff(2)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="rectangle-popup" class="d-none">
+        <div>
+          <div class="p-1 px-3 m-1 font-weight-bold border-bottom text-center">
+            😴 A rectangle receiver needs to rest, so it periodically starts and stops listening.
+          </div>
+          <div class="form-group">
+            <label for="volume-slider">Volume<span class="px-1">(<span>100</span>%)</span></label>
+            <input
+              type="range"
+              class="custom-range form-control"
+              id="volume-slider"
+              min="0"
+              max="100"
+              step="5"
+              value="100"
+              data-handle="meta_volume"
+            />
+          </div>
+          <div class="form-group">
+            <label for="sample-select">Select sample</label>
+            <select class="form-control" id="sample-select" data-handle="meta_audio">
+              <option value="kick_1" selected>Kick drum</option>
+              <option value="snare_1">Snare</option>
+              <option value="hi_hat_1">Hi-hat (Closed)</option>
+              <option value="hi_hat_2">Hi-Hat (Open)</option>
+              <option value="groovy_1">Groovy riff</option>
+              <option value="funk_1">Funky riff</option>
+              <option value="funk_2">Funky riff(2)</option>
+              <option value="jazz_1">Jazz riff</option>
+              <option value="jazz_1">Jazz riff(2)</option>
+              <option value="metal_1">Metal riff</option>
+              <option value="metal_2">Metal riff(2)</option>
+            </select>
+            <div class="form-group">
+              <label for="interval-slider">Interval<span class="px-1">(<span>1000</span>ms)</span></label>
+              <input
+                type="range"
+                class="custom-range form-control"
+                id="interval-slider"
+                min="0"
+                max="5000"
+                step="100"
+                value="1000"
+                data-handle="meta_interval"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="polyline-popup" class="d-none">
+        <div>
+          <div class="p-1 px-3 m-1 font-weight-bold border-bottom text-center">
+            😐 A polyline receiver only activates once for each trigger!
+          </div>
+          <div class="form-group">
+            <label for="volume-slider">Volume<span class="px-1">(<span>100</span>%)</span> </label>
+            <input
+              type="range"
+              class="custom-range form-control"
+              id="volume-slider"
+              min="0"
+              max="100"
+              step="5"
+              value="100"
+              data-handle="meta_volume"
+            />
+          </div>
+          <div class="form-group">
+            <label for="sample-select">Select sample</label>
+            <select class="form-control" id="sample-select" data-handle="meta_audio">
+              <option value="kick_1">Kick drum</option>
+              <option value="snare_1" selected>Snare</option>
+              <option value="hi_hat_1">Hi-hat (Closed)</option>
+              <option value="hi_hat_2">Hi-Hat (Open)</option>
+              <option value="groovy_1">Groovy riff</option>
+              <option value="funk_1">Funky riff</option>
+              <option value="funk_2">Funky riff(2)</option>
+              <option value="jazz_1">Jazz riff</option>
+              <option value="jazz_1">Jazz riff(2)</option>
+              <option value="metal_1">Metal riff</option>
+              <option value="metal_2">Metal riff(2)</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   </body>
