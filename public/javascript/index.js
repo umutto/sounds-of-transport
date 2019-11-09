@@ -1,7 +1,7 @@
 import { draw_lines, draw_controls, draw_trains } from "./map_control.js";
 import { load_local_data, load_live_data } from "./data_handler.js";
 
-window.speed_offset = 200;
+window.speed_offset = 1;
 
 async function getConfig() {
   if (location.hostname == "localhost")
@@ -67,5 +67,8 @@ async function init_map(mb_token, map_id) {
   ).then(function(data) {
     // var train_live = await load_live_data("odpt:Train", [`odpt:railway=odpt.Railway:JR-East.ChuoRapid`]);
     draw_trains(interactive_map, data);
+    window.setInterval(function() {
+      draw_trains(interactive_map, data);
+    }, 30000);
   });
 }
