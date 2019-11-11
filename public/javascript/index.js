@@ -2,6 +2,7 @@ import { draw_lines, draw_controls, draw_trains } from "./map_control.js";
 import { load_local_data, load_live_data } from "./data_handler.js";
 
 window.speed_offset = 1;
+window.muted = false;
 
 async function getConfig() {
   if (location.hostname == "localhost")
