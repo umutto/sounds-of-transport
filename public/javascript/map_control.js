@@ -61,14 +61,28 @@ const draw_controls = async map => {
       states: [
         {
           stateName: "show-info",
-          onClick: function(btn, map) {
-            $.ajax({
-              url: "https://api.github.com/repos/umutto/sounds-of-transport/introduction",
+          onClick: async function(btn, map) {
+            $(".loading-overlay").show();
+            var intro = await $.ajax({
+              url: "https://api.github.com/repos/umutto/sounds-of-transport/contents/INTRODUCTION.md",
               headers: { Accept: "application/vnd.github.html" }
-            }).done(function(data) {
-              $("#modal-info .modal-body").html(data);
-              $("#modal-info").modal("show");
             });
+            $.ajax({
+              type: "POST",
+              url: "https://api.github.com/markdown",
+              data: JSON.stringify({
+                text: atob(intro.content),
+                mode: "markdown"
+              }),
+              contentType: "text/plain"
+            })
+              .done(function(data) {
+                $("#modal-info .modal-body").html(data);
+                $("#modal-info").modal("show");
+              })
+              .always(function() {
+                $(".loading-overlay").hide();
+              });
           },
           title: "Learn more",
           icon: "fas fa-info-circle easy-button-large"
