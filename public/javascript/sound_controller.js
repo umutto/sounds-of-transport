@@ -12,7 +12,8 @@ const audio_lib = {
   metal_2: { src: "/public/audio/metal_2.wav" }
 };
 
-const inject_dom = (id, audio, loop = false, volume = 1) => {
+const inject_dom = (id, audio, loop = false, volume = 1, autoplay = true) => {
+  $(`#${id}`).remove();
   $("<audio></audio>")
     .attr({
       id: id,
@@ -20,9 +21,33 @@ const inject_dom = (id, audio, loop = false, volume = 1) => {
       volume: volume,
       loop: loop,
       preload: "auto",
-      autoplay: "true"
+      autoplay: autoplay
     })
     .appendTo("#audio-wrapper");
 };
 
-export { audio_lib, inject_dom };
+const play_sound = audio_elem => {
+  var isPlaying = audio_elem.currentTime > 0 && !audio_elem.paused && !audio_elem.ended && audio_elem.readyState > 2;
+  if (!isPlaying && !window.muted) audio_elem.play();
+};
+
+const mute_all = (mute = true) => {
+  if (mute)
+    $("audio").each(function() {
+      this.volume = 0;
+    });
+  else
+    $("audio").each(function() {
+      this.volume =
+        window.editableLayers
+          .getLayer(
+            $(this)
+              .attr("id")
+              .split("_")
+              .pop()
+          )
+          .getPopup().options.meta_volume / 100;
+    });
+};
+
+export { audio_lib, inject_dom, play_sound, mute_all };

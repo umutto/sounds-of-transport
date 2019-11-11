@@ -42,6 +42,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.js"></script>
     <script src="public/javascript/leaflet.motion.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.9.1/src/leaflet.geometryutil.js"></script>
 
     <script src="https://cdn.rawgit.com/osamutake/japanese-holidays-js/v1.0.9/lib/japanese-holidays.min.js"></script>
 
@@ -60,7 +61,7 @@
 
     <div id="audio-wrapper"></div>
 
-    <!-- Modal -->
+    <!-- Modal info -->
     <div
       class="modal fade"
       id="modal-info"
@@ -77,8 +78,33 @@
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal settings -->
+    <div
+      class="modal fade"
+      id="modal-settings"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modal-settings-title"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modal-settings-title">Settings</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
           <div class="modal-body">
-            It is a good thing
+            <p>Settings placeholder</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -161,7 +187,7 @@
               <option value="funk_1">Funky loop</option>
               <option value="funk_2">Funky loop(2)</option>
               <option value="jazz_1">Jazz loop</option>
-              <option value="jazz_1">Jazz loop(2)</option>
+              <option value="jazz_2">Jazz loop(2)</option>
               <option value="metal_1">Metal loop</option>
               <option value="metal_2">Metal loop(2)</option>
             </select>
@@ -171,7 +197,7 @@
                 type="range"
                 class="custom-range form-control"
                 id="interval-slider"
-                min="0"
+                min="100"
                 max="5000"
                 step="100"
                 value="1000"
@@ -210,7 +236,7 @@
               <option value="funk_1">Funky loop</option>
               <option value="funk_2">Funky loop(2)</option>
               <option value="jazz_1">Jazz loop</option>
-              <option value="jazz_1">Jazz loop(2)</option>
+              <option value="jazz_2">Jazz loop(2)</option>
               <option value="metal_1">Metal loop</option>
               <option value="metal_2">Metal loop(2)</option>
             </select>

@@ -62,7 +62,8 @@ body {
   display: none;
 }
 
-.leaflet-bar button {
+.leaflet-bar button,
+.leaflet-bar a {
   height: 46px !important;
   width: 46px !important;
   line-height: 46px !important;
@@ -90,54 +91,52 @@ body {
   font-size: 10px !important;
 }
 
-.stress {
-  animation: fatten 1s ease-in-out;
-  -webkit-animation: fatten 1s ease-in-out;
-  animation-iteration-count: 1;
-  animation-direction: alternate;
-  stroke-width: 10;
-}
-@keyframes fatten {
-  to {
-    stroke-width: 4;
-  }
+.sleeper {
+  fill: #1f6650;
+  -webkit-transition: fill 0.25s ease-out;
+  -moz-transition: fill 0.25s ease-out;
+  -o-transition: fill 0.25s ease-out;
+  transition: fill 0.25s ease-out;
 }
 
 .pulse {
-  animation: pulsate 0.5s ease-in-out;
-  -webkit-animation: pulsate 0.5s ease-in-out;
+  animation: pulsate 0.5s cubic-bezier(1, 1, 0, 0);
+  -webkit-animation: pulsate 0.5s cubic-bezier(1, 1, 0, 0);
   animation-iteration-count: infinite;
   animation-direction: alternate;
   stroke-opacity: 0.4;
+  stroke-dasharray: 50;
 }
 @keyframes pulsate {
   to {
     stroke-opacity: 0.8;
-  }
-}
-
-.drawing {
-  animation: dash 5s ease-in-out;
-  -webkit-animation: dash 5s ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-  stroke-dasharray: 50;
-}
-@keyframes dash {
-  to {
     stroke-dashoffset: 250;
+    stroke: #4a4343;
   }
 }
 
-.sleeper {
-  animation: activate 2s ease-in-out;
-  -webkit-animation: activate 2s ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-  fill: #1f6650;
+/* Leaflet draw bigger buttons hack */
+.leaflet-draw-toolbar .leaflet-draw-draw-polyline {
+  background-position: 8px 7px !important;
 }
-@keyframes activate {
-  to {
-    fill: #efefef;
-  }
+.leaflet-draw-toolbar .leaflet-draw-draw-rectangle {
+  background-position: -52px 7px !important;
+}
+.leaflet-draw-toolbar .leaflet-draw-draw-circle {
+  background-position: -82px 7px !important;
+}
+.leaflet-draw-toolbar .leaflet-draw-edit-edit.leaflet-disabled {
+  background-position: -202px 7px !important;
+}
+.leaflet-draw-toolbar .leaflet-draw-edit-remove.leaflet-disabled {
+  background-position: -232px 7px !important;
+}
+.leaflet-draw-toolbar .leaflet-draw-edit-edit {
+  background-position: -142px 7px !important;
+}
+.leaflet-draw-toolbar .leaflet-draw-edit-remove {
+  background-position: -172px 7px !important;
+}
+.leaflet-touch .leaflet-draw-actions {
+  left: 48px;
 }
