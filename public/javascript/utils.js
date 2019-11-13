@@ -20,3 +20,8 @@ export function interpolatePosition(p1, p2, e) {
   e = e > 0 ? (e > 1 ? 1 : e) : 0;
   return L.latLng(p1.lat + e * (p2.lat - p1.lat), p1.lng + e * (p2.lng - p1.lng));
 }
+
+export function get_now() {
+  if (window.offset_date) return new Date(new Date().getTime() + window.offset_date);
+  else return new Date();
+}

@@ -1,21 +1,88 @@
-import { get_push_point, interpolatePosition } from "./utils.js";
-import { audio_lib, inject_dom } from "./sound_controller.js";
+import { get_push_point, interpolatePosition, get_now } from "./utils.js";
+import { audio_lib, inject_dom, play_sound, mute_all } from "./sound_controller.js";
+
+const trigger_func = (layer, type) => {
+  if (!layer.getPopup().options.meta_element)
+    inject_dom(
+      `audio_${layer._leaflet_id}`,
+      audio_lib[layer.getPopup().options.meta_audio],
+      type !== "polyline",
+      layer.getPopup().options.meta_volume / 100
+    );
+  else play_sound($(`#${layer.getPopup().options.meta_element}`).get(0));
+
+  layer.getPopup().options.meta_element = `audio_${layer._leaflet_id}`;
+};
 
 const draw_controls = async map => {
+  L.easyButton({
+    id: "btn-mute",
+    states: [
+      {
+        stateName: "mute",
+        onClick: function(btn, map) {
+          window.muted = true;
+          mute_all();
+          btn.state("un-mute");
+        },
+        title: "Mute",
+        icon: "fas fa-volume-up easy-button-large"
+      },
+      {
+        stateName: "un-mute",
+        onClick: function(btn, map) {
+          window.muted = false;
+          mute_all(false);
+          btn.state("mute");
+        },
+        title: "Unmute",
+        icon: "fas fa-volume-mute easy-button-large"
+      }
+    ],
+    position: "topright"
+  }).addTo(map);
+
   var info_buttons = [
+    L.easyButton({
+      id: "btn-settings",
+      states: [
+        {
+          stateName: "show-info",
+          onClick: function(btn, map) {
+            $("#modal-settings").modal("show");
+          },
+          title: "Settings",
+          icon: "fas fa-cog easy-button-large"
+        }
+      ]
+    }),
     L.easyButton({
       id: "btn-info",
       states: [
         {
           stateName: "show-info",
-          onClick: function(btn, map) {
-            $.ajax({
-              url: "https://api.github.com/repos/umutto/sounds-of-transport/readme",
+          onClick: async function(btn, map) {
+            $(".loading-overlay").show();
+            var intro = await $.ajax({
+              url: "https://api.github.com/repos/umutto/sounds-of-transport/contents/INTRODUCTION.md",
               headers: { Accept: "application/vnd.github.html" }
-            }).done(function(data) {
-              $("#modal-info .modal-body").html(data);
-              $("#modal-info").modal("show");
             });
+            $.ajax({
+              type: "POST",
+              url: "https://api.github.com/markdown",
+              data: JSON.stringify({
+                text: atob(intro.content),
+                mode: "markdown"
+              }),
+              contentType: "text/plain"
+            })
+              .done(function(data) {
+                $("#modal-info .modal-body").html(data);
+                $("#modal-info").modal("show");
+              })
+              .always(function() {
+                $(".loading-overlay").hide();
+              });
           },
           title: "Learn more",
           icon: "fas fa-info-circle easy-button-large"
@@ -83,12 +150,11 @@ const draw_controls = async map => {
 };
 
 const register_map_events = map => {
-  window.receiverref = [];
   var editableLayers = new L.FeatureGroup();
   map.addLayer(editableLayers);
 
-  L.drawLocal.draw.toolbar.buttons.circle = "Draw a continuous receiver circle.";
-  L.drawLocal.draw.toolbar.buttons.rectangle = "Draw a periodic receiver rectangle.";
+  L.drawLocal.draw.toolbar.buttons.circle = "Draw a continuous activation receiver circle.";
+  L.drawLocal.draw.toolbar.buttons.rectangle = "Draw a periodic activation receiver rectangle.";
   L.drawLocal.draw.toolbar.buttons.polyline = "Draw a single activation receiver polyline.";
 
   $("body").on("input", ".form-control", function() {
@@ -97,6 +163,16 @@ const register_map_events = map => {
       .siblings("label")
       .find("span span")
       .text($(this).val());
+
+    if ($(this).data("handle") === "meta_volume") {
+      if ($(`#${window.popupTarget.options.meta_element}`).get(0)) {
+        $(`#${window.popupTarget.options.meta_element}`).get(0).volume = $(this).val() / 100;
+      }
+    } else if ($(this).data("handle") === "meta_audio") {
+      $(`#${window.popupTarget.options.meta_element}`).remove();
+      window.popupTarget.options.meta_element = null;
+      window.popupTarget.options.meta_trigger = false;
+    }
   });
 
   map.on("popupopen", function(e) {
@@ -131,11 +207,13 @@ const register_map_events = map => {
         shapeOptions: {
           color: "#bc4873"
         }
+        //, repeatMode: true
       },
       rectangle: {
         shapeOptions: {
           color: "#1f6650"
         }
+        //, repeatMode: true
       },
       polyline: {
         shapeOptions: {
@@ -159,18 +237,20 @@ const register_map_events = map => {
   map.on(L.Draw.Event.CREATED, function(e) {
     var type = e.layerType,
       layer = e.layer;
-    window.receiverref.push(layer);
     editableLayers.addLayer(layer);
+
+    layer.options.meta_type = type;
 
     switch (type) {
       case "circle":
         var popup = L.popup({
           meta_volume: 100,
-          meta_audio: "jazz_1"
+          meta_audio: "jazz_1",
+          meta_type: type
         }).setContent($("#circle-popup").html());
         layer.bindPopup(popup);
 
-        layer.options.meta_trigger = false;
+        layer.getPopup().options.meta_trigger = false;
         layer.options.meta_fun = function() {
           var radius = layer.getRadius();
           var circleCenterPoint = layer.getLatLng();
@@ -178,24 +258,13 @@ const register_map_events = map => {
           let _intersect = Object.entries(window.trainref).some(([k, v]) => {
             return v && Math.abs(circleCenterPoint.distanceTo(v.getMarker().getLatLng())) <= radius;
           });
-          let _triggered = layer.options.meta_trigger;
+          let _triggered = layer.getPopup().options.meta_trigger;
 
           if (_intersect && !_triggered) {
-            if (!layer.getPopup().options.meta_element)
-              inject_dom(
-                `audio_${layer._leaflet_id}`,
-                audio_lib[layer.getPopup().options.meta_audio],
-                true,
-                layer.getPopup().options.meta_volume
-              );
-            else
-              $(`#${layer.getPopup().options.meta_element}`)
-                .get(0)
-                .play();
-
             $(layer.getElement()).addClass("pulse");
-            layer.options.meta_trigger = true;
-            layer.getPopup().options.meta_element = `audio_${layer._leaflet_id}`;
+            layer.getPopup().options.meta_trigger = true;
+
+            trigger_func(layer, type);
           } else if (!_intersect && _triggered) {
             if (layer.getPopup().options.meta_element) {
               let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
@@ -204,56 +273,105 @@ const register_map_events = map => {
             }
 
             $(layer.getElement()).removeClass("pulse");
-            layer.options.meta_trigger = false;
+            layer.getPopup().options.meta_trigger = false;
           }
         };
         break;
       case "rectangle":
         var popup = L.popup({
           meta_volume: 100,
-          meta_audio: "kick_drum_1",
-          meta_interval: 1
+          meta_audio: "kick_1",
+          meta_interval: 1000,
+          meta_timestamp: get_now().getTime()
         }).setContent($("#rectangle-popup").html());
         layer.bindPopup(popup);
 
-        // $(layer.getElement()).addClass("sleeper");
-        layer.options.meta_trigger = false;
+        layer.getPopup().options.meta_trigger = false;
         layer.options.meta_fun = function() {
           let _intersect = Object.entries(window.trainref).some(([k, v]) => {
             return v && layer.getBounds().contains(v.getMarker().getLatLng());
           });
-          let _triggered = layer.options.meta_trigger;
+          let _triggered = layer.getPopup().options.meta_trigger;
 
           if (_intersect && !_triggered) {
-            $(layer.getElement()).addClass("drawing");
-            layer.options.meta_trigger = true;
+            $(layer.getElement())
+              .addClass("pulse")
+              .addClass("sleeper");
+            layer.getPopup().options.meta_trigger = true;
+            layer.getPopup().options.meta_timestamp = get_now().getTime();
+
+            trigger_func(layer, type);
+          } else if (_intersect && _triggered) {
+            let _int = layer.getPopup().options.meta_interval;
+            let _ts = layer.getPopup().options.meta_timestamp;
+            if ((get_now().getTime() - _ts) % (_int * 2) <= _int) {
+              $(layer.getElement()).css("fill", "#1f6650");
+              let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+              play_sound(audio_elem);
+            } else {
+              $(layer.getElement()).css("fill", "#e9e9e9");
+              let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+              audio_elem.pause();
+              audio_elem.currentTime = 0;
+            }
           } else if (!_intersect && _triggered) {
-            $(layer.getElement()).removeClass("drawing");
-            layer.options.meta_trigger = false;
+            if (layer.getPopup().options.meta_element) {
+              let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+              audio_elem.pause();
+              audio_elem.currentTime = 0;
+            }
+
+            $(layer.getElement()).removeClass("pulse");
+            layer.getPopup().options.meta_trigger = false;
           }
         };
         break;
       case "polyline":
         var popup = L.popup({
           meta_volume: 100,
-          meta_audio: "snare_1"
+          meta_audio: "snare_1",
+          meta_intersects: 0
         }).setContent($("#polyline-popup").html());
         layer.bindPopup(popup);
 
-        layer.options.meta_trigger = false;
+        layer.getPopup().options.meta_trigger = false;
         layer.options.meta_fun = function() {
-          let _intersect = Object.entries(window.trainref).some(([k, v]) => {
-            return v && true;
-          });
-          let _triggered = layer.options.meta_trigger;
+          let _intersect = Object.entries(window.trainref).filter(
+            ([k, v]) =>
+              v &&
+              L.GeometryUtil.closest(
+                map,
+                editableLayers
+                  .getLayers()
+                  .filter(l => l.options.meta_type === "polyline")
+                  .map(l => l.getLatLngs()),
+                v.getMarker().getLatLng()
+              ).distance <
+                5 + window.speed_offset / 10
+          ).length;
+          let _triggered = layer.getPopup().options.meta_trigger;
 
-          if (_intersect && !_triggered) {
-            $(layer.getElement()).addClass("stress");
-            layer.options.meta_trigger = true;
-          } else if (!_intersect && _triggered) {
-            $(layer.getElement()).removeClass("stress");
-            layer.options.meta_trigger = false;
+          if (_intersect > 0 && !_triggered) {
+            $(layer.getElement()).css("stroke", "#ffdc34");
+            layer.getPopup().options.meta_trigger = true;
+
+            trigger_func(layer, type);
+          } else if (_intersect > 0 && _intersect != layer.getPopup().options.meta_intersects && _triggered) {
+            $(layer.getElement()).css("stroke", "#ffdc34");
+            let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+            audio_elem.currentTime = 0;
+            play_sound(play());
+          } else if (_intersect > 0 && _intersect == layer.getPopup().options.meta_intersects && _triggered) {
+            $(layer.getElement()).css("stroke", "#110133");
+          } else if (_intersect == 0 && _triggered) {
+            $(layer.getElement()).css("stroke", "#110133");
+            let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+            audio_elem.pause();
+            audio_elem.currentTime = 0;
+            layer.getPopup().options.meta_trigger = false;
           }
+
+          layer.getPopup().options.meta_intersects = _intersect;
         };
         break;
       default:
@@ -261,17 +379,32 @@ const register_map_events = map => {
     }
   });
 
+  map.on(L.Draw.Event.DELETESTART, function(e) {
+    if (!window.muted) mute_all();
+  });
+
+  map.on(L.Draw.Event.DELETESTOP, function(e) {
+    if (!window.muted) mute_all(false);
+  });
+
+  map.on(L.Draw.Event.DELETED, function(e) {
+    e.layers.getLayers().forEach(l => {
+      $(`#${l.getPopup().options.meta_element}`).remove();
+      l.getPopup().options.meta_element = null;
+      l.getPopup().options.meta_trigger = false;
+    });
+  });
+
   window.setInterval(function() {
-    Object.values(window.receiverref).forEach(rec => rec.options.meta_fun());
+    Object.values(window.editableLayers.getLayers()).forEach(rec => rec.options.meta_fun());
   }, 25);
+
+  window.editableLayers = editableLayers;
 };
 
 const draw_lines = async (map, l_renderer, data) => {
   var lines = data.lines;
   var line_color = data.line_colors;
-
-  // limit lines due to frequend api calls
-  lines = lines.filter(l => l.station.length > 10);
 
   let _o = 0;
   var offset_pattern = [...Array(10)].map(() => {
@@ -338,13 +471,11 @@ const draw_lines = async (map, l_renderer, data) => {
         meta_name: s.code,
         meta_duration: s.dur
       }).addTo(stationLayer);
+      station.bindTooltip(s.title + " Station").openTooltip();
 
       // station_groups[s.title] = [...(station_groups[s.title] || []), { s: station, ns: ns }];
       stationref[s.code] = station;
 
-      station.on("click", function() {
-        console.log(s.title + " Station");
-      });
       station.on("mouseover", function(e) {
         e.target.setStyle({
           weight: 5
@@ -370,12 +501,10 @@ const draw_lines = async (map, l_renderer, data) => {
       meta_name: l.code,
       meta_stations: line_stations
     }).addTo(lineLayer);
+    polyline.bindTooltip(l.title, { sticky: true }).openTooltip();
 
     lineref[l.code] = polyline;
 
-    polyline.on("click", function() {
-      console.log(l.title);
-    });
     polyline.on("mouseover", function(e) {
       e.target.setStyle({
         weight: 5,
@@ -416,20 +545,20 @@ const draw_lines = async (map, l_renderer, data) => {
 };
 
 const draw_trains = async (map, data) => {
-  var time_now = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  var time_now = get_now().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   time_now = time_now < "03:00" ? parseInt(time_now.split(":")[0]) + 24 + ":" + time_now.split(":")[1] : time_now;
 
-  // ///////////////////////////////////////
-  // ///////////////////////////////////////
+  // // ///////////////////////////////////////
+  // // ///////////////////////////////////////
 
-  // var d = new Date();
+  // var d = get_now();
   // d.setHours(d.getHours() - 6);
   // time_now = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
-  // ///////////////////////////////////////
-  // ///////////////////////////////////////
+  // // ///////////////////////////////////////
+  // // ///////////////////////////////////////
 
-  var train_layer = window.train_layer || L.featureGroup();
+  var train_layer = L.featureGroup();
   var trainref = window.trainref || {};
 
   Object.entries(data)
@@ -448,12 +577,12 @@ const draw_trains = async (map, data) => {
             let from_station = window.stationref[train.options.meta_stations[from_index.i - 1]];
             let to_station = window.stationref[train.options.meta_stations[to_index.i - 1]];
 
-            let ft = new Date();
+            let ft = get_now();
             ft.setHours(parseInt(from_index.t.split(":")[0]) % 24);
             ft.setMinutes(parseInt(from_index.t.split(":")[1]));
             ft.setSeconds(0);
 
-            let elapsed_time = new Date(new Date() - ft);
+            let elapsed_time = new Date(get_now() - ft);
             elapsed_time = elapsed_time.getMinutes() * 60 + elapsed_time.getSeconds();
 
             var animatedMarker = L.motion.polyline(
@@ -479,8 +608,6 @@ const draw_trains = async (map, data) => {
               {
                 showMarker: true,
                 riseOnHover: true,
-                title: k + " - " + vt.n,
-                alt: k + " - " + vt.n,
                 icon: L.divIcon({
                   className: "train-icon",
                   html: `<div style="background: ${train.options.color}"></div>`
@@ -511,10 +638,11 @@ const draw_trains = async (map, data) => {
                 this._renderer._removePath(this);
                 delete this.getMarker();
                 delete this;
-                // delete trainref[this.options.meta_name];
                 trainref[this.options.meta_name] = null;
               }
             });
+
+            animatedMarker.bindTooltip(`${k.split(":").pop()} - (${vt.n})`).openTooltip();
 
             trainref[vt.n] = animatedMarker;
             train_layer.addLayer(animatedMarker);
@@ -527,7 +655,6 @@ const draw_trains = async (map, data) => {
   train_layer.bringToFront();
 
   window.trainref = trainref;
-  window.train_layer = train_layer;
 };
 
 export { draw_lines, draw_controls, draw_trains };

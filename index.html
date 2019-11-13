@@ -23,6 +23,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
 
     <link
@@ -42,7 +46,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.js"></script>
     <script src="public/javascript/leaflet.motion.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.9.1/src/leaflet.geometryutil.js"></script>
 
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/css/bootstrap-slider.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/bootstrap-slider.min.js"></script>
     <script src="https://cdn.rawgit.com/osamutake/japanese-holidays-js/v1.0.9/lib/japanese-holidays.min.js"></script>
 
     <link rel="stylesheet" href="public/css/style.css" />
@@ -60,7 +70,7 @@
 
     <div id="audio-wrapper"></div>
 
-    <!-- Modal -->
+    <!-- Modal info -->
     <div
       class="modal fade"
       id="modal-info"
@@ -77,10 +87,111 @@
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
+          <div class="modal-body p-3"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal settings -->
+    <div
+      class="modal fade"
+      id="modal-settings"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modal-settings-title"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modal-settings-title">Settings</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
           <div class="modal-body">
-            It is a good thing
+            <div class="form-group pb-3 border-bottom">
+              <h5 class="pb-1">Filter lines by # of stations</h5>
+              <div class="form-row px-5 pb-3 mb-1">
+                <input
+                  id="stationFilter"
+                  type="text"
+                  data-slider-ticks="[0, 10, 20, 30, 40, 50, 60, 70]"
+                  data-slider-ticks-snap-bounds="2"
+                  data-slider-ticks-labels='["0", "10", "20", "30", "40", "50", "60", "70"]'
+                />
+              </div>
+            </div>
+            <div class="form-group pb-3 border-bottom">
+              <h5>Filter lines by operators</h5>
+              <div id="operator-form" class="form-row pl-5 py-3">
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_Odakyu" value="Odakyu" checked />
+                  <label class="form-check-label" for="cb_Odakyu">Odakyu</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_Keisei" value="Keisei" checked />
+                  <label class="form-check-label" for="cb_Keisei">Keisei</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_Seibu" value="Seibu" checked />
+                  <label class="form-check-label" for="cb_Seibu">Seibu</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_JR-East" value="JR-East" checked />
+                  <label class="form-check-label" for="cb_JR-East">JR-East</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_Toei" value="Toei" checked />
+                  <label class="form-check-label" for="cb_Toei">Toei</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_Keikyu" value="Keikyu" checked />
+                  <label class="form-check-label" for="cb_Keikyu">Keikyu</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_Keio" value="Keio" checked />
+                  <label class="form-check-label" for="cb_Keio">Keio</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_Tobu" value="Tobu" checked />
+                  <label class="form-check-label" for="cb_Tobu">Tobu</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_TWR" value="TWR" checked />
+                  <label class="form-check-label" for="cb_TWR">TWR</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_Yurikamome" value="Yurikamome" checked />
+                  <label class="form-check-label" for="cb_Yurikamome">Yurikamome</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_TokyoMetro" value="TokyoMetro" checked />
+                  <label class="form-check-label" for="cb_TokyoMetro">TokyoMetro</label>
+                </div>
+                <div class="col-md-3">
+                  <input class="form-check-input" type="checkbox" id="cb_Tokyu" value="Tokyu" checked />
+                  <label class="form-check-label" for="cb_Tokyu">Tokyu</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group pb-3">
+              <h5 class="pb-1">Time travel</h5>
+              <div class="form-row">
+                <div class="col-8">
+                  <input type="text" class="form-control" name="dateOverride" />
+                </div>
+                <div class="col-4">
+                  <button class="btn btn-primary w-100" class="form-control" name="dateReset">Reset to now</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="modal-footer">
+            <button id="btn-filter" type="button" class="btn btn-primary" data-dismiss="modal">Save</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
         </div>
@@ -161,7 +272,7 @@
               <option value="funk_1">Funky loop</option>
               <option value="funk_2">Funky loop(2)</option>
               <option value="jazz_1">Jazz loop</option>
-              <option value="jazz_1">Jazz loop(2)</option>
+              <option value="jazz_2">Jazz loop(2)</option>
               <option value="metal_1">Metal loop</option>
               <option value="metal_2">Metal loop(2)</option>
             </select>
@@ -171,7 +282,7 @@
                 type="range"
                 class="custom-range form-control"
                 id="interval-slider"
-                min="0"
+                min="100"
                 max="5000"
                 step="100"
                 value="1000"
@@ -210,7 +321,7 @@
               <option value="funk_1">Funky loop</option>
               <option value="funk_2">Funky loop(2)</option>
               <option value="jazz_1">Jazz loop</option>
-              <option value="jazz_1">Jazz loop(2)</option>
+              <option value="jazz_2">Jazz loop(2)</option>
               <option value="metal_1">Metal loop</option>
               <option value="metal_2">Metal loop(2)</option>
             </select>
