@@ -1,4 +1,4 @@
-import { get_push_point, interpolatePosition } from "./utils.js";
+import { get_push_point, interpolatePosition, get_now } from "./utils.js";
 import { audio_lib, inject_dom, play_sound, mute_all } from "./sound_controller.js";
 
 const trigger_func = (layer, type) => {
@@ -7,7 +7,7 @@ const trigger_func = (layer, type) => {
       `audio_${layer._leaflet_id}`,
       audio_lib[layer.getPopup().options.meta_audio],
       type !== "polyline",
-      layer.getPopup().options.meta_volume
+      layer.getPopup().options.meta_volume / 100
     );
   else play_sound($(`#${layer.getPopup().options.meta_element}`).get(0));
 
@@ -164,9 +164,11 @@ const register_map_events = map => {
       .find("span span")
       .text($(this).val());
 
-    if ($(this).data("handle") === "meta_volume")
-      $(`#${window.popupTarget.options.meta_element}`).get(0).volume = $(this).val() / 100;
-    else if ($(this).data("handle") === "meta_audio") {
+    if ($(this).data("handle") === "meta_volume") {
+      if ($(`#${window.popupTarget.options.meta_element}`).get(0)) {
+        $(`#${window.popupTarget.options.meta_element}`).get(0).volume = $(this).val() / 100;
+      }
+    } else if ($(this).data("handle") === "meta_audio") {
       $(`#${window.popupTarget.options.meta_element}`).remove();
       window.popupTarget.options.meta_element = null;
       window.popupTarget.options.meta_trigger = false;
@@ -280,7 +282,7 @@ const register_map_events = map => {
           meta_volume: 100,
           meta_audio: "kick_1",
           meta_interval: 1000,
-          meta_timestamp: Date.now()
+          meta_timestamp: get_now().getTime()
         }).setContent($("#rectangle-popup").html());
         layer.bindPopup(popup);
 
@@ -296,13 +298,13 @@ const register_map_events = map => {
               .addClass("pulse")
               .addClass("sleeper");
             layer.getPopup().options.meta_trigger = true;
-            layer.getPopup().options.meta_timestamp = Date.now();
+            layer.getPopup().options.meta_timestamp = get_now().getTime();
 
             trigger_func(layer, type);
           } else if (_intersect && _triggered) {
             let _int = layer.getPopup().options.meta_interval;
             let _ts = layer.getPopup().options.meta_timestamp;
-            if ((Date.now() - _ts) % (_int * 2) <= _int) {
+            if ((get_now().getTime() - _ts) % (_int * 2) <= _int) {
               $(layer.getElement()).css("fill", "#1f6650");
               let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
               play_sound(audio_elem);
@@ -403,9 +405,6 @@ const register_map_events = map => {
 const draw_lines = async (map, l_renderer, data) => {
   var lines = data.lines;
   var line_color = data.line_colors;
-
-  // limit lines due to frequend api calls
-  lines = lines.filter(l => l.station.length > 20);
 
   let _o = 0;
   var offset_pattern = [...Array(10)].map(() => {
@@ -546,18 +545,18 @@ const draw_lines = async (map, l_renderer, data) => {
 };
 
 const draw_trains = async (map, data) => {
-  var time_now = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  var time_now = get_now().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   time_now = time_now < "03:00" ? parseInt(time_now.split(":")[0]) + 24 + ":" + time_now.split(":")[1] : time_now;
 
-  // ///////////////////////////////////////
-  // ///////////////////////////////////////
+  // // ///////////////////////////////////////
+  // // ///////////////////////////////////////
 
-  // var d = new Date();
+  // var d = get_now();
   // d.setHours(d.getHours() - 6);
   // time_now = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
-  // ///////////////////////////////////////
-  // ///////////////////////////////////////
+  // // ///////////////////////////////////////
+  // // ///////////////////////////////////////
 
   var train_layer = L.featureGroup();
   var trainref = window.trainref || {};
@@ -578,12 +577,12 @@ const draw_trains = async (map, data) => {
             let from_station = window.stationref[train.options.meta_stations[from_index.i - 1]];
             let to_station = window.stationref[train.options.meta_stations[to_index.i - 1]];
 
-            let ft = new Date();
+            let ft = get_now();
             ft.setHours(parseInt(from_index.t.split(":")[0]) % 24);
             ft.setMinutes(parseInt(from_index.t.split(":")[1]));
             ft.setSeconds(0);
 
-            let elapsed_time = new Date(new Date() - ft);
+            let elapsed_time = new Date(get_now() - ft);
             elapsed_time = elapsed_time.getMinutes() * 60 + elapsed_time.getSeconds();
 
             var animatedMarker = L.motion.polyline(
@@ -639,12 +638,11 @@ const draw_trains = async (map, data) => {
                 this._renderer._removePath(this);
                 delete this.getMarker();
                 delete this;
-                // delete trainref[this.options.meta_name];
                 trainref[this.options.meta_name] = null;
               }
             });
 
-            animatedMarker.bindTooltip(`${k} - (${vt.n})`).openTooltip();
+            animatedMarker.bindTooltip(`${k.split(":").pop()} - (${vt.n})`).openTooltip();
 
             trainref[vt.n] = animatedMarker;
             train_layer.addLayer(animatedMarker);

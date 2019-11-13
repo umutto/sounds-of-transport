@@ -14,16 +14,16 @@ const audio_lib = {
 
 const inject_dom = (id, audio, loop = false, volume = 1, autoplay = true) => {
   $(`#${id}`).remove();
-  $("<audio></audio>")
+  let audio_elem = $("<audio></audio>")
     .attr({
       id: id,
       src: audio.src,
-      volume: volume,
       loop: loop,
       preload: "auto",
       autoplay: autoplay
     })
     .appendTo("#audio-wrapper");
+  audio_elem.get(0).volume = volume;
 };
 
 const play_sound = audio_elem => {
