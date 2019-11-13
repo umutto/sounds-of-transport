@@ -140,3 +140,12 @@ body {
 .leaflet-touch .leaflet-draw-actions {
   left: 48px;
 }
+
+.slider.slider-horizontal {
+  width: 100%;
+  margin-bottom: 20px;
+}
+.slider.slider-horizontal .slider-tick-label-container {
+  display: flex;
+  justify-content: space-between;
+}

@@ -1,5 +1,6 @@
 import { draw_lines, draw_controls, draw_trains } from "./map_control.js";
 import { load_local_data, load_live_data } from "./data_handler.js";
+import { get_now } from "./utils.js";
 
 window.speed_offset = 1;
 window.muted = false;
@@ -17,26 +18,74 @@ async function getConfig() {
     });
 }
 
+function date_updated(start, _, __) {
+  window.offset_date = start.diff();
+  console.log(get_now());
+  reset_values();
+}
+
+function reset_values() {
+  $(".loading-overlay").show();
+  Object.values(window.trainref).forEach(l => {
+    l.clearAllEventListeners();
+  });
+  window.trainref = {};
+  Object.values(window.stationref).forEach(l => {
+    l.clearAllEventListeners();
+  });
+  window.stationref = {};
+  Object.values(window.lineref).forEach(l => {
+    l.clearAllEventListeners();
+  });
+  window.lineref = {};
+  $(".leaflet-bar").remove();
+  window.buttonref = {};
+  window.lf_map.clearAllEventListeners();
+  window.lf_map.remove();
+
+  init_map(window.api_conf.mapbox.value, "interactiveMap");
+}
+
 $(function() {
-  let _date = new Date();
-  window.isHoliday = JapaneseHolidays.isHoliday(new Date()) || _date.getDay() % 6 == 0;
+  window.station_filter = $("#stationFilter").slider({
+    min: 0,
+    max: 70,
+    value: [20, 60]
+  });
+
+  init_date_picker(date_updated);
+  $(`button[name="dateReset"]`).on("click", function() {
+    window.offset_date = null;
+    init_date_picker(date_updated);
+  });
+
+  $(".modal #btn-filter").on("click", function() {
+    reset_values();
+  });
 
   getConfig();
+
+  // mobile friendly modals
   if (window.history && window.history.pushState) {
     $(".modal").on("show.bs.modal", function(e) {
-      if (window.location.hash != "#info") window.history.pushState("forward", null, "#info");
+      if (window.location.hash != "#modal") window.history.pushState("forward", null, "#modal");
     });
     $(".modal").on("hide.bs.modal", function(e) {
-      if (window.location.hash == "#info") window.history.back();
+      if (window.location.hash == "#modal") window.history.back();
     });
 
     $(window).on("popstate", function() {
-      if (window.location.hash != "#info") $(".modal").modal("hide");
+      if (window.location.hash != "#modal") $(".modal").modal("hide");
     });
   }
 });
 
 async function init_map(mb_token, map_id) {
+  $(`#${map_id}`).remove();
+  $(".main-wrapper").append(`<div id="${map_id}" class="h-100"></div>`);
+  let _date = get_now();
+  var isHoliday = JapaneseHolidays.isHoliday(get_now()) || _date.getDay() % 6 == 0;
+
   var interactive_map = L.map(map_id, {
     center: [35.6762, 139.7503],
     zoom: 13,
@@ -59,12 +108,30 @@ async function init_map(mb_token, map_id) {
 
   var lines = await load_local_data("data/Public/line_station_coords.json");
   var line_colors = await load_local_data("data/Public/line_colors.json");
+
+  // limit lines due to limiting frequent api calls
+  let [min_station, max_station] = window.station_filter.slider("getValue");
+  let valid_operators = $("#operator-form .form-check-input:checked")
+    .map((_, c) => c.value)
+    .toArray();
+  lines = lines.filter(
+    l =>
+      l.station.length >= min_station &&
+      l.station.length <= max_station &&
+      valid_operators.includes(
+        l.code
+          .split(":")
+          .pop()
+          .split(".")[0]
+      )
+  );
+
   await draw_lines(interactive_map, l_renderer, { lines, line_colors });
   await draw_controls(interactive_map);
   $(".loading-overlay").hide();
 
   load_local_data(
-    window.isHoliday ? "data/Public/train_timetable_holiday.json" : "data/Public/train_timetable_weekday.json"
+    isHoliday ? "data/Public/train_timetable_holiday.json" : "data/Public/train_timetable_weekday.json"
   ).then(function(data) {
     // var train_live = await load_live_data("odpt:Train", [`odpt:railway=odpt.Railway:JR-East.ChuoRapid`]);
     draw_trains(interactive_map, data);
@@ -73,3 +140,50 @@ async function init_map(mb_token, map_id) {
     }, 30000);
   });
 }
+
+function init_date_picker(cb) {
+  $('input[name="dateOverride"]').daterangepicker(
+    {
+      singleDatePicker: true,
+      showDropdowns: true,
+      timePicker: true,
+      timePicker24Hour: true,
+      drops: "up",
+      locale: {
+        format: "DD/MM/YY HH:mm"
+      },
+      opens: "center",
+      startDate: moment().format("DD/MM/YY HH:mm")
+    },
+    cb
+  );
+}
+
+// Train name generation for filtering on settings menu:
+
+// result = {};
+// [...new Set(lines.map(l => l.code.split(":")[1].split(".")[0]))].forEach(
+//   ln =>
+//     (result[ln] = lines
+//       .filter(l => l.code.split(":")[1].split(".")[0] == ln)
+//       .map(l => ({ code: l.code, name: l.title.split(" ")[0], stations: l.station.length })))
+// );
+
+// html_result = "";
+// Object.entries(result).forEach(([k, v]) => {
+//   html_result += `<span class="ml-3"><input class="form-check-input" type="checkbox" id="cb_all_${k}" value=${k}>
+//   <label class="form-check-label" for="cb_all_${k}">${k}</label>
+//   </span>
+// <div class="form-row border p-1">`;
+//   v.forEach(
+//     ll =>
+//       (html_result += `<div class="form-check form-check-inline">
+//   <input class="form-check-input" type="checkbox" id="cb_${ll.code}" value="${ll.code}">
+//   <label class="form-check-label border-bottom" style="border-bottom-color: ${
+//     line_color[ll.code]
+//   } !important;" !important;" for="cb_${ll.code}">${ll.name}</label>
+// </div>`)
+//   );
+//   html_result += "</div>";
+// });
+// html_result;
