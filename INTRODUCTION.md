@@ -24,7 +24,7 @@ Due to the high amount of train lines, the application can be a bit slow on olde
 
 The application is a simple Javascript web application that solely runs on the client's browser. It uses leaflet.js for the map display and jquery for the map interactions along with some low-level leaflet.js plugins. For more technical information about the implementation, source code can be seen from [github.com/umutto/sounds-of-transport](https://www.github.com/umutto/sounds-of-transport).
 
-This application uses 3 data sources from the odpt data dump, namely; `odpt:Railway`, `odpt:Station` and `odpt:TrainTimetable`. Bus and Airline data are omitted due to performance and UX issues. This data is pre-parsed using python to minimize the size of the file downloaded.
+This application uses 3 data sources from the odpt data dump, namely; `odpt:Railway`, `odpt:Station` and `odpt:TrainTimetable`. Bus and Airline data are omitted due to performance and UX issues. This data is pre-parsed using python to minimize the size of the initial file downloaded.
 
 Currently, the application only uses the data dumps, switching to the live data is a work in progress. The application is still in development and will be frequently updated.
 
