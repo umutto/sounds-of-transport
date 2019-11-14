@@ -9,10 +9,10 @@
 - ☐ Dynamic fps detection and filtering for performance?
 - ☐ Combine live data with timetables (just update the timetable for that train and continue using that data)
 - ☐ Add more sound loops
-- ☐ Add a way to save and recover creations
+- 🗹 Add a way to save and recover creations
 - ☐ Add a way to upload (or at least link) custom audio
 
-- ☐ Also clean the shapes and audios when reset. (currently breaking all)
+- 🗹 Also clean the shapes and audios when reset. (currently breaking all)
 - 🗹 Volume is not working when the audio element is not initialized yet.
 
 - 🗹 Add corner cases for audios also the base functionality (when audio is changed from dropdow, when it's deleted, stop etc..)

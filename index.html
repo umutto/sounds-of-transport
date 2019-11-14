@@ -54,6 +54,8 @@
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/bootstrap-slider.min.js"></script>
     <script src="https://cdn.rawgit.com/osamutake/japanese-holidays-js/v1.0.9/lib/japanese-holidays.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
 
     <link rel="stylesheet" href="public/css/style.css" />
     <script type="module" src="public/javascript/utils.js"></script>
@@ -189,6 +191,40 @@
                 </div>
               </div>
             </div>
+
+            <div class="form-group pb-3">
+              <h5 class="pb-1">Create a share code</h5>
+              <div class="form-row">
+                <div id="text-share-info" class="w-100 text-muted bg-light p-1 m-1 text-center">
+                  Click the create button to create a shareable code.
+                </div>
+                <div class="col-md-9">
+                  <div class="input-group">
+                    <textarea
+                      class="form-control"
+                      id="input-share"
+                      placeholder="Once you click share, your shareable code will be generated here.&#10;Or, you can paste a pre-made code here and click the load button."
+                      rows="3"
+                    ></textarea>
+                    <div class="input-group-append">
+                      <div class="input-group-text px-1">
+                        <button id="copy-share" class="btn" data-clipboard-target="#input-share">
+                          <i class="far fa-copy"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <button class="btn btn-primary w-100 my-1" class="form-control" id="btn-share" name="share">
+                    Create
+                  </button>
+                  <button class="btn btn-primary w-100 mb-1" class="form-control" id="btn-load" name="share">
+                    Load
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="modal-footer">
             <button id="btn-filter" type="button" class="btn btn-primary" data-dismiss="modal">Save</button>
@@ -216,7 +252,7 @@
             <label for="volume-slider">Volume<span class="px-1">(<span>100</span>%)</span></label>
             <input
               type="range"
-              class="custom-range form-control"
+              class="custom-range form-control popup-input"
               id="volume-slider"
               min="0"
               max="100"
@@ -227,7 +263,7 @@
           </div>
           <div class="form-group">
             <label for="sample-select">Select sample</label>
-            <select class="form-control" id="sample-select" data-handle="meta_audio">
+            <select class="form-control popup-input" id="sample-select" data-handle="meta_audio">
               <option value="kick_1">Kick drum</option>
               <option value="snare_1">Snare</option>
               <option value="hi_hat_1">Hi-hat (Closed)</option>
@@ -252,7 +288,7 @@
             <label for="volume-slider">Volume<span class="px-1">(<span>100</span>%)</span></label>
             <input
               type="range"
-              class="custom-range form-control"
+              class="custom-range form-control popup-input"
               id="volume-slider"
               min="0"
               max="100"
@@ -263,7 +299,7 @@
           </div>
           <div class="form-group">
             <label for="sample-select">Select sample</label>
-            <select class="form-control" id="sample-select" data-handle="meta_audio">
+            <select class="form-control popup-input" id="sample-select" data-handle="meta_audio">
               <option value="kick_1" selected>Kick drum</option>
               <option value="snare_1">Snare</option>
               <option value="hi_hat_1">Hi-hat (Closed)</option>
@@ -280,7 +316,7 @@
               <label for="interval-slider">Interval<span class="px-1">(<span>1000</span>ms)</span></label>
               <input
                 type="range"
-                class="custom-range form-control"
+                class="custom-range form-control popup-input"
                 id="interval-slider"
                 min="100"
                 max="5000"
@@ -301,7 +337,7 @@
             <label for="volume-slider">Volume<span class="px-1">(<span>100</span>%)</span> </label>
             <input
               type="range"
-              class="custom-range form-control"
+              class="custom-range form-control popup-input"
               id="volume-slider"
               min="0"
               max="100"
@@ -312,7 +348,7 @@
           </div>
           <div class="form-group">
             <label for="sample-select">Select sample</label>
-            <select class="form-control" id="sample-select" data-handle="meta_audio">
+            <select class="form-control popup-input" id="sample-select" data-handle="meta_audio">
               <option value="kick_1">Kick drum</option>
               <option value="snare_1" selected>Snare</option>
               <option value="hi_hat_1">Hi-hat (Closed)</option>

@@ -1,6 +1,6 @@
 import { draw_lines, draw_controls, draw_trains } from "./map_control.js";
 import { load_local_data, load_live_data } from "./data_handler.js";
-import { get_now } from "./utils.js";
+import { get_now, compress, decompress } from "./utils.js";
 
 window.speed_offset = 1;
 window.muted = false;
@@ -24,29 +24,58 @@ function date_updated(start, _, __) {
   reset_values();
 }
 
-function reset_values() {
+function reset_values(p_load = null) {
   $(".loading-overlay").show();
   Object.values(window.trainref).forEach(l => {
-    l.clearAllEventListeners();
+    if (l) l.clearAllEventListeners();
   });
   window.trainref = {};
   Object.values(window.stationref).forEach(l => {
-    l.clearAllEventListeners();
+    if (l) l.clearAllEventListeners();
   });
   window.stationref = {};
   Object.values(window.lineref).forEach(l => {
-    l.clearAllEventListeners();
+    if (l) l.clearAllEventListeners();
   });
+  window.editableLayers.clearAllEventListeners();
+  window.editableLayers.clearLayers();
+  $("audio").remove();
   window.lineref = {};
   $(".leaflet-bar").remove();
   window.buttonref = {};
   window.lf_map.clearAllEventListeners();
   window.lf_map.remove();
 
-  init_map(window.api_conf.mapbox.value, "interactiveMap");
+  init_map(window.api_conf.mapbox.value, "interactiveMap", true, p_load);
 }
 
 $(function() {
+  $("#btn-share").on("click", function() {
+    let _c = compress();
+    $("#input-share").val(_c.length < 2000 ? `${window.location.origin}/?s=${_c}` : _c);
+    $("#text-share-info").text(
+      _c.length < 2000
+        ? "You can copy and share the url below! Visitors will see your map!"
+        : "Paste the code below using the Load Map button to recreate your map!"
+    );
+  });
+
+  $("#input-share").popover({ content: "copied to clipboard!", trigger: "manual", placement: "top" });
+  new ClipboardJS("#copy-share");
+  $("#copy-share").on("click", function() {
+    if ($("#input-share").val().length > 0) {
+      $("#input-share").popover("show");
+      setTimeout(function() {
+        $("#input-share").popover("hide");
+      }, 1000);
+    }
+  });
+
+  $("#btn-load").on("click", function() {
+    let load_s = $("#input-share").val();
+    if (load_s.length > 0) reset_values(load_s);
+  });
+
   window.station_filter = $("#stationFilter").slider({
     min: 0,
     max: 70,
@@ -80,7 +109,7 @@ $(function() {
   }
 });
 
-async function init_map(mb_token, map_id) {
+async function init_map(mb_token, map_id, is_reset = false, comp_str = null) {
   $(`#${map_id}`).remove();
   $(".main-wrapper").append(`<div id="${map_id}" class="h-100"></div>`);
   let _date = get_now();
@@ -109,11 +138,29 @@ async function init_map(mb_token, map_id) {
   var lines = await load_local_data("data/Public/line_station_coords.json");
   var line_colors = await load_local_data("data/Public/line_colors.json");
 
+  var pre_load;
+  var q_saved = $.QueryString.s;
+  if (q_saved && !is_reset)
+    try {
+      pre_load = decompress(q_saved);
+    } catch (error) {
+      console.log("Failed to decode the url string,", error);
+    }
+  else if (comp_str && is_reset)
+    try {
+      pre_load = decompress(comp_str);
+    } catch (error) {
+      console.log("Failed to decode the url string,", error);
+    }
+
+  if (pre_load) pre_load.f_static();
+
   // limit lines due to limiting frequent api calls
   let [min_station, max_station] = window.station_filter.slider("getValue");
   let valid_operators = $("#operator-form .form-check-input:checked")
     .map((_, c) => c.value)
     .toArray();
+
   lines = lines.filter(
     l =>
       l.station.length >= min_station &&
@@ -128,17 +175,19 @@ async function init_map(mb_token, map_id) {
 
   await draw_lines(interactive_map, l_renderer, { lines, line_colors });
   await draw_controls(interactive_map);
+
+  var time_tables = await load_local_data(
+    isHoliday ? "data/Public/train_timetable_holiday.json" : "data/Public/train_timetable_weekday.json"
+  );
+  // var train_live = await load_live_data("odpt:Train", [`odpt:railway=odpt.Railway:JR-East.ChuoRapid`]);
+  await draw_trains(interactive_map, time_tables);
+
+  if (pre_load) pre_load.f_draw();
   $(".loading-overlay").hide();
 
-  load_local_data(
-    isHoliday ? "data/Public/train_timetable_holiday.json" : "data/Public/train_timetable_weekday.json"
-  ).then(function(data) {
-    // var train_live = await load_live_data("odpt:Train", [`odpt:railway=odpt.Railway:JR-East.ChuoRapid`]);
-    draw_trains(interactive_map, data);
-    window.setInterval(function() {
-      draw_trains(interactive_map, data);
-    }, 30000);
-  });
+  window.setInterval(function() {
+    draw_trains(interactive_map, time_tables);
+  }, 30000);
 }
 
 function init_date_picker(cb) {
