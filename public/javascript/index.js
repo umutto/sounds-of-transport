@@ -52,7 +52,7 @@ function reset_values(p_load = null) {
 $(function() {
   $("#btn-share").on("click", function() {
     let _c = compress();
-    $("#input-share").val(_c.length < 2000 ? `${window.location.origin}${window.location.pathname}/?s=${_c}` : _c);
+    $("#input-share").val(_c.length < 2000 ? `${window.location.origin}${window.location.pathname}?s=${_c}` : _c);
     $("#text-share-info").text(
       _c.length < 2000
         ? "You can copy and share the url below! Visitors will see your map!"
