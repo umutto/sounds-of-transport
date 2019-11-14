@@ -71,7 +71,7 @@ const draw_controls = async map => {
               type: "POST",
               url: "https://api.github.com/markdown",
               data: JSON.stringify({
-                text: atob(intro.content),
+                text: intro,
                 mode: "markdown"
               }),
               contentType: "text/plain"
