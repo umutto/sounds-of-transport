@@ -12,13 +12,13 @@ There are 3 types of receivers with different functions:
 
 - **Circular:** When a train intersects with it, it plays an audio, looping forever until a train no longer exists within its bounds.
 - **Rectangular**: When a train intersects with it, it starts a cycle of being active/inactive. It continuously plays an audio during its active phase and pauses to rest during its inactive phase.
-- **Polyline**: When a train passes over it, it plays the audio once. When another train passes it plays the audio again from the beginning.
+- **Polyline**: When a train passes over it, it plays the audio once. When another train passes over, it plays the audio again from the beginning.
 
-These properties and the audio to play can be adjusted through the popup menu that can be opened by clicking on the receiver.
+These properties and the audio to play can be adjusted through the popup menu that is opened by clicking on the receiver.
 
 Moreover, the speed of time ticks can be adjusted using the control buttons on the bottom right corner. (Although fun, this function may confuse the animation cycles, so it's only recommended for the fun, not the real masterpiece creation!)
 
-Due to the high amount of train lines, the application can be a bit slow on older devices, if you seem to be having performance issues, the number of train lines being tracked can be filtered through the settings menu button on the top right corner.
+Due to the high amount of train lines, the application can be a bit slow on older devices, if you seem to be having performance issues, the number of train lines being tracked can be filtered through the settings menu button on the top right corner. Although created with the thought, this web app is not optimized for mobile use. Thus using PC is recommended for a better user experience.
 
 ## Technical Details
 
