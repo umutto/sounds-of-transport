@@ -360,7 +360,7 @@ const register_map_events = map => {
             $(layer.getElement()).css("stroke", "#ffdc34");
             let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
             audio_elem.currentTime = 0;
-            play_sound(play());
+            play_sound(audio_elem);
           } else if (_intersect > 0 && _intersect == layer.getPopup().options.meta_intersects && _triggered) {
             $(layer.getElement()).css("stroke", "#110133");
           } else if (_intersect == 0 && _triggered) {
