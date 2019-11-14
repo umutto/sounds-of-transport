@@ -14,6 +14,149 @@ const trigger_func = (layer, type) => {
   layer.getPopup().options.meta_element = `audio_${layer._leaflet_id}`;
 };
 
+const draw_options = (map, layer, type, volume = null, audio = null, interval = null) => {
+  editableLayers.addLayer(layer);
+
+  layer.options.meta_type = type;
+
+  switch (type) {
+    case "circle":
+      var popup = L.popup({
+        meta_volume: volume || 100,
+        meta_audio: audio || "jazz_1",
+        meta_type: type
+      }).setContent($("#circle-popup").html());
+      layer.bindPopup(popup);
+
+      layer.getPopup().options.meta_trigger = false;
+      layer.options.meta_fun = function() {
+        var radius = layer.getRadius();
+        var circleCenterPoint = layer.getLatLng();
+
+        let _intersect = Object.entries(window.trainref).some(([k, v]) => {
+          return v && Math.abs(circleCenterPoint.distanceTo(v.getMarker().getLatLng())) <= radius;
+        });
+        let _triggered = layer.getPopup().options.meta_trigger;
+
+        if (_intersect && !_triggered) {
+          $(layer.getElement()).addClass("pulse");
+          layer.getPopup().options.meta_trigger = true;
+
+          trigger_func(layer, type);
+        } else if (!_intersect && _triggered) {
+          if (layer.getPopup().options.meta_element) {
+            let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+            audio_elem.pause();
+            // audio_elem.currentTime = 0;
+          }
+
+          $(layer.getElement()).removeClass("pulse");
+          layer.getPopup().options.meta_trigger = false;
+        }
+      };
+      break;
+    case "rectangle":
+      var popup = L.popup({
+        meta_volume: volume || 100,
+        meta_audio: audio || "kick_1",
+        meta_interval: interval || 1000,
+        meta_timestamp: get_now().getTime()
+      }).setContent($("#rectangle-popup").html());
+      layer.bindPopup(popup);
+
+      layer.getPopup().options.meta_trigger = false;
+      layer.options.meta_fun = function() {
+        let _intersect = Object.entries(window.trainref).some(([k, v]) => {
+          return v && layer.getBounds().contains(v.getMarker().getLatLng());
+        });
+        let _triggered = layer.getPopup().options.meta_trigger;
+
+        if (_intersect && !_triggered) {
+          $(layer.getElement())
+            .addClass("pulse")
+            .addClass("sleeper");
+          layer.getPopup().options.meta_trigger = true;
+          layer.getPopup().options.meta_timestamp = get_now().getTime();
+
+          trigger_func(layer, type);
+        } else if (_intersect && _triggered) {
+          let _int = layer.getPopup().options.meta_interval;
+          let _ts = layer.getPopup().options.meta_timestamp;
+          if ((get_now().getTime() - _ts) % (_int * 2) <= _int) {
+            $(layer.getElement()).css("fill", "#1f6650");
+            let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+            play_sound(audio_elem);
+          } else {
+            $(layer.getElement()).css("fill", "#e9e9e9");
+            let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+            audio_elem.pause();
+            audio_elem.currentTime = 0;
+          }
+        } else if (!_intersect && _triggered) {
+          if (layer.getPopup().options.meta_element) {
+            let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+            audio_elem.pause();
+            audio_elem.currentTime = 0;
+          }
+
+          $(layer.getElement()).removeClass("pulse");
+          layer.getPopup().options.meta_trigger = false;
+        }
+      };
+      break;
+    case "polyline":
+      var popup = L.popup({
+        meta_volume: volume || 100,
+        meta_audio: audio || "snare_1",
+        meta_intersects: 0
+      }).setContent($("#polyline-popup").html());
+      layer.bindPopup(popup);
+
+      layer.getPopup().options.meta_trigger = false;
+      layer.options.meta_fun = function() {
+        let _intersect = Object.entries(window.trainref).filter(
+          ([k, v]) =>
+            v &&
+            L.GeometryUtil.closest(
+              map,
+              editableLayers
+                .getLayers()
+                .filter(l => l.options.meta_type === "polyline")
+                .map(l => l.getLatLngs()),
+              v.getMarker().getLatLng()
+            ).distance <
+              5 + window.speed_offset / 10
+        ).length;
+        let _triggered = layer.getPopup().options.meta_trigger;
+
+        if (_intersect > 0 && !_triggered) {
+          $(layer.getElement()).css("stroke", "#ffdc34");
+          layer.getPopup().options.meta_trigger = true;
+
+          trigger_func(layer, type);
+        } else if (_intersect > 0 && _intersect != layer.getPopup().options.meta_intersects && _triggered) {
+          $(layer.getElement()).css("stroke", "#ffdc34");
+          let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+          audio_elem.currentTime = 0;
+          play_sound(audio_elem);
+        } else if (_intersect > 0 && _intersect == layer.getPopup().options.meta_intersects && _triggered) {
+          $(layer.getElement()).css("stroke", "#110133");
+        } else if (_intersect == 0 && _triggered) {
+          $(layer.getElement()).css("stroke", "#110133");
+          let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
+          audio_elem.pause();
+          audio_elem.currentTime = 0;
+          layer.getPopup().options.meta_trigger = false;
+        }
+
+        layer.getPopup().options.meta_intersects = _intersect;
+      };
+      break;
+    default:
+      break;
+  }
+};
+
 const draw_controls = async map => {
   L.easyButton({
     id: "btn-mute",
@@ -157,7 +300,7 @@ const register_map_events = map => {
   L.drawLocal.draw.toolbar.buttons.rectangle = "Draw a periodic activation receiver rectangle.";
   L.drawLocal.draw.toolbar.buttons.polyline = "Draw a single activation receiver polyline.";
 
-  $("body").on("input", ".form-control", function() {
+  $("body").on("input", ".popup-input", function() {
     window.popupTarget.options[$(this).data("handle")] = $(this).val();
     $(this)
       .siblings("label")
@@ -237,146 +380,7 @@ const register_map_events = map => {
   map.on(L.Draw.Event.CREATED, function(e) {
     var type = e.layerType,
       layer = e.layer;
-    editableLayers.addLayer(layer);
-
-    layer.options.meta_type = type;
-
-    switch (type) {
-      case "circle":
-        var popup = L.popup({
-          meta_volume: 100,
-          meta_audio: "jazz_1",
-          meta_type: type
-        }).setContent($("#circle-popup").html());
-        layer.bindPopup(popup);
-
-        layer.getPopup().options.meta_trigger = false;
-        layer.options.meta_fun = function() {
-          var radius = layer.getRadius();
-          var circleCenterPoint = layer.getLatLng();
-
-          let _intersect = Object.entries(window.trainref).some(([k, v]) => {
-            return v && Math.abs(circleCenterPoint.distanceTo(v.getMarker().getLatLng())) <= radius;
-          });
-          let _triggered = layer.getPopup().options.meta_trigger;
-
-          if (_intersect && !_triggered) {
-            $(layer.getElement()).addClass("pulse");
-            layer.getPopup().options.meta_trigger = true;
-
-            trigger_func(layer, type);
-          } else if (!_intersect && _triggered) {
-            if (layer.getPopup().options.meta_element) {
-              let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
-              audio_elem.pause();
-              // audio_elem.currentTime = 0;
-            }
-
-            $(layer.getElement()).removeClass("pulse");
-            layer.getPopup().options.meta_trigger = false;
-          }
-        };
-        break;
-      case "rectangle":
-        var popup = L.popup({
-          meta_volume: 100,
-          meta_audio: "kick_1",
-          meta_interval: 1000,
-          meta_timestamp: get_now().getTime()
-        }).setContent($("#rectangle-popup").html());
-        layer.bindPopup(popup);
-
-        layer.getPopup().options.meta_trigger = false;
-        layer.options.meta_fun = function() {
-          let _intersect = Object.entries(window.trainref).some(([k, v]) => {
-            return v && layer.getBounds().contains(v.getMarker().getLatLng());
-          });
-          let _triggered = layer.getPopup().options.meta_trigger;
-
-          if (_intersect && !_triggered) {
-            $(layer.getElement())
-              .addClass("pulse")
-              .addClass("sleeper");
-            layer.getPopup().options.meta_trigger = true;
-            layer.getPopup().options.meta_timestamp = get_now().getTime();
-
-            trigger_func(layer, type);
-          } else if (_intersect && _triggered) {
-            let _int = layer.getPopup().options.meta_interval;
-            let _ts = layer.getPopup().options.meta_timestamp;
-            if ((get_now().getTime() - _ts) % (_int * 2) <= _int) {
-              $(layer.getElement()).css("fill", "#1f6650");
-              let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
-              play_sound(audio_elem);
-            } else {
-              $(layer.getElement()).css("fill", "#e9e9e9");
-              let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
-              audio_elem.pause();
-              audio_elem.currentTime = 0;
-            }
-          } else if (!_intersect && _triggered) {
-            if (layer.getPopup().options.meta_element) {
-              let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
-              audio_elem.pause();
-              audio_elem.currentTime = 0;
-            }
-
-            $(layer.getElement()).removeClass("pulse");
-            layer.getPopup().options.meta_trigger = false;
-          }
-        };
-        break;
-      case "polyline":
-        var popup = L.popup({
-          meta_volume: 100,
-          meta_audio: "snare_1",
-          meta_intersects: 0
-        }).setContent($("#polyline-popup").html());
-        layer.bindPopup(popup);
-
-        layer.getPopup().options.meta_trigger = false;
-        layer.options.meta_fun = function() {
-          let _intersect = Object.entries(window.trainref).filter(
-            ([k, v]) =>
-              v &&
-              L.GeometryUtil.closest(
-                map,
-                editableLayers
-                  .getLayers()
-                  .filter(l => l.options.meta_type === "polyline")
-                  .map(l => l.getLatLngs()),
-                v.getMarker().getLatLng()
-              ).distance <
-                5 + window.speed_offset / 10
-          ).length;
-          let _triggered = layer.getPopup().options.meta_trigger;
-
-          if (_intersect > 0 && !_triggered) {
-            $(layer.getElement()).css("stroke", "#ffdc34");
-            layer.getPopup().options.meta_trigger = true;
-
-            trigger_func(layer, type);
-          } else if (_intersect > 0 && _intersect != layer.getPopup().options.meta_intersects && _triggered) {
-            $(layer.getElement()).css("stroke", "#ffdc34");
-            let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
-            audio_elem.currentTime = 0;
-            play_sound(audio_elem);
-          } else if (_intersect > 0 && _intersect == layer.getPopup().options.meta_intersects && _triggered) {
-            $(layer.getElement()).css("stroke", "#110133");
-          } else if (_intersect == 0 && _triggered) {
-            $(layer.getElement()).css("stroke", "#110133");
-            let audio_elem = $(`#${layer.getPopup().options.meta_element}`).get(0);
-            audio_elem.pause();
-            audio_elem.currentTime = 0;
-            layer.getPopup().options.meta_trigger = false;
-          }
-
-          layer.getPopup().options.meta_intersects = _intersect;
-        };
-        break;
-      default:
-        break;
-    }
+    draw_options(map, layer, type);
   });
 
   map.on(L.Draw.Event.DELETESTART, function(e) {
@@ -657,4 +661,4 @@ const draw_trains = async (map, data) => {
   window.trainref = trainref;
 };
 
-export { draw_lines, draw_controls, draw_trains };
+export { draw_lines, draw_controls, draw_trains, draw_options };

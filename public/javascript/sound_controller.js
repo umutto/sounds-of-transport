@@ -23,7 +23,7 @@ const inject_dom = (id, audio, loop = false, volume = 1, autoplay = true) => {
       autoplay: autoplay
     })
     .appendTo("#audio-wrapper");
-  audio_elem.get(0).volume = volume;
+  audio_elem.get(0).volume = window.muted ? 0 : volume;
 };
 
 const play_sound = audio_elem => {
@@ -32,6 +32,7 @@ const play_sound = audio_elem => {
 };
 
 const mute_all = (mute = true) => {
+  window.muted = mute;
   if (mute)
     $("audio").each(function() {
       this.volume = 0;
