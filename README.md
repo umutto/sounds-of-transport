@@ -2,6 +2,7 @@
 
 ## TODO
 
+- ☐ Support touch events! (or make it easier, if drag is too much work)
 - 🗹 Info button (show readme in a modal)
 - 🗹 Github button (link to repository)
 - 🗹 Clean unused libraries
