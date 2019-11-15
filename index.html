@@ -116,7 +116,20 @@
           </div>
           <div class="modal-body">
             <div class="form-group pb-3 border-bottom">
-              <h5 class="pb-1">Filter lines by # of stations</h5>
+              <h5 class="pb-1">
+                Filter lines by # of stations
+                <span
+                  class="d-inline-block"
+                  tabindex="-1"
+                  data-toggle="popover"
+                  data-trigger="focus"
+                  title="Filter by number of stations on a line"
+                  data-html="true"
+                  style="font-size:65%"
+                  data-content="You can choose to display or remove train lines based on the number of stations they have by using the slider below."
+                  ><small><i class="far fa-question-circle ml-1"></i></small
+                ></span>
+              </h5>
               <div class="form-row px-5 pb-3 mb-1">
                 <input
                   id="stationFilter"
@@ -128,7 +141,20 @@
               </div>
             </div>
             <div class="form-group pb-3 border-bottom">
-              <h5>Filter lines by operators</h5>
+              <h5>
+                Filter lines by operators
+                <span
+                  class="d-inline-block"
+                  tabindex="-1"
+                  data-toggle="popover"
+                  data-trigger="focus"
+                  title="Filter by train operators"
+                  data-html="true"
+                  style="font-size:65%"
+                  data-content="You can choose to remove or display the train lines by checking their operators below."
+                  ><small><i class="far fa-question-circle ml-1"></i></small
+                ></span>
+              </h5>
               <div id="operator-form" class="form-row pl-5 py-3">
                 <div class="col-md-3">
                   <input class="form-check-input" type="checkbox" id="cb_Odakyu" value="Odakyu" checked />
@@ -181,7 +207,20 @@
               </div>
             </div>
             <div class="form-group pb-3">
-              <h5 class="pb-1">Time travel</h5>
+              <h5 class="pb-1">
+                Time travel
+                <span
+                  class="d-inline-block"
+                  tabindex="-1"
+                  data-toggle="popover"
+                  data-trigger="focus"
+                  title="Simulate a particular time"
+                  data-html="true"
+                  style="font-size:65%"
+                  data-content="Select the date/time you want to simulate from the control below, once you click apply train timetables will be simulated according to that time, basically time travelling."
+                  ><small><i class="far fa-question-circle ml-1"></i></small
+                ></span>
+              </h5>
               <div class="form-row">
                 <div class="col-8">
                   <input type="text" class="form-control" name="dateOverride" />
@@ -193,7 +232,20 @@
             </div>
 
             <div class="form-group pb-3">
-              <h5 class="pb-1">Create a share code</h5>
+              <h5 class="pb-1">
+                Create a share code
+                <span
+                  class="d-inline-block"
+                  tabindex="-1"
+                  data-toggle="popover"
+                  data-trigger="focus"
+                  title="Sharing your creations"
+                  data-html="true"
+                  style="font-size:65%"
+                  data-content="You can create a unique code for your creations and share with friends!<br>Your sharable code below includes your selected options, such as current map location, filtered operators etc..."
+                  ><small><i class="far fa-question-circle ml-1"></i></small
+                ></span>
+              </h5>
               <div class="form-row">
                 <div id="text-share-info" class="w-100 text-muted bg-light p-1 m-1 text-center">
                   Click the create button to create a shareable code.
