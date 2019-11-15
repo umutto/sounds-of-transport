@@ -129,7 +129,9 @@ function decode_draw_layers(_editable_layers) {
             L.polyline(elem.ln, { color: "#110133", weight: 10 }),
             _type,
             parseInt(elem.v, 36),
-            _value_of_option(_type, elem.a)
+            _value_of_option(_type, elem.a),
+            null,
+            false
           );
         else if (_type === "rectangle")
           draw_options(
@@ -138,7 +140,8 @@ function decode_draw_layers(_editable_layers) {
             _type,
             parseInt(elem.v, 36),
             _value_of_option(_type, elem.a),
-            parseInt(elem.i, 36)
+            parseInt(elem.i, 36),
+            false
           );
         else if (_type === "circle")
           draw_options(
@@ -146,7 +149,9 @@ function decode_draw_layers(_editable_layers) {
             L.circle(elem.ln, elem.r, { color: "#bc4873" }),
             _type,
             parseInt(elem.v, 36),
-            _value_of_option(_type, elem.a)
+            _value_of_option(_type, elem.a),
+            null,
+            false
           );
       }
     });

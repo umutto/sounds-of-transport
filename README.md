@@ -2,12 +2,16 @@
 
 ## TODO
 
+- 🗹 Support touch events! (hacked to open the edit menu on leaflet draw for now)
+- ☐ Add explanations of every setting (settings menu, popup menus, did for settings, popup menu next...)
+- 🗹 Add a clock to main page or details on train popups so the time travel makes sense? (did train popups instead of a clock, seemed cleaner, use a popover on time setting instead of a clock)
 - 🗹 Info button (show readme in a modal)
 - 🗹 Github button (link to repository)
 - 🗹 Clean unused libraries
 - ☐ Clean unused, commented code.
 - ☐ Dynamic fps detection and filtering for performance?
 - ☐ Combine live data with timetables (just update the timetable for that train and continue using that data)
+- ☐ Add new receivers with different quirks
 - ☐ Add more sound loops
 - 🗹 Add a way to save and recover creations
 - ☐ Add a way to upload (or at least link) custom audio

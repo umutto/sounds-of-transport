@@ -61,6 +61,8 @@ $(function() {
   });
 
   $("#input-share").popover({ content: "copied to clipboard!", trigger: "manual", placement: "top" });
+  $('[data-toggle="popover"]').popover();
+
   new ClipboardJS("#copy-share");
   $("#copy-share").on("click", function() {
     if ($("#input-share").val().length > 0) {
