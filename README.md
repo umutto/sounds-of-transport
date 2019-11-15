@@ -9,6 +9,7 @@
 - ☐ Clean unused, commented code.
 - ☐ Dynamic fps detection and filtering for performance?
 - ☐ Combine live data with timetables (just update the timetable for that train and continue using that data)
+- ☐ Add new receivers with different quirks
 - ☐ Add more sound loops
 - 🗹 Add a way to save and recover creations
 - ☐ Add a way to upload (or at least link) custom audio
