@@ -14,7 +14,7 @@ const trigger_func = (layer, type) => {
   layer.getPopup().options.meta_element = `audio_${layer._leaflet_id}`;
 };
 
-const draw_options = (map, layer, type, volume = null, audio = null, interval = null) => {
+const draw_options = (map, layer, type, volume = null, audio = null, interval = null, user_trigger = true) => {
   editableLayers.addLayer(layer);
 
   layer.options.meta_type = type;
@@ -54,6 +54,9 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
           layer.getPopup().options.meta_trigger = false;
         }
       };
+
+      layer.setRadius(Math.pow(2, 19 - window.lf_map.getZoom()) * 10);
+      if (user_trigger && L.Browser.mobile) draw_toolbar._toolbars.edit._modes.edit.button.click();
       break;
     case "rectangle":
       var popup = L.popup({
@@ -103,6 +106,20 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
           layer.getPopup().options.meta_trigger = false;
         }
       };
+
+      console.log("b");
+      let map_bounds = Object.values(window.lf_map.getBounds()).map(b => Object.values(b));
+      let _n = map_bounds[0][0] - (map_bounds[0][0] - map_bounds[1][0]) / 3,
+        _s = map_bounds[1][0] + (map_bounds[0][0] - map_bounds[1][0]) / 3,
+        _w = map_bounds[0][1] - (map_bounds[0][1] - map_bounds[1][1]) / 4,
+        _e = map_bounds[1][1] + (map_bounds[0][1] - map_bounds[1][1]) / 4;
+
+      layer.setBounds([
+        [_n, _e],
+        [_s, _w]
+      ]);
+      // layer.setBounds();
+      if (user_trigger && L.Browser.mobile) draw_toolbar._toolbars.edit._modes.edit.button.click();
       break;
     case "polyline":
       var popup = L.popup({
@@ -344,7 +361,7 @@ const register_map_events = map => {
     window.popupTarget = null;
   });
 
-  new L.Control.Draw({
+  window.draw_toolbar = new L.Control.Draw({
     draw: {
       circle: {
         shapeOptions: {
@@ -646,7 +663,16 @@ const draw_trains = async (map, data) => {
               }
             });
 
-            animatedMarker.bindTooltip(`${k.split(":").pop()} - (${vt.n})`).openTooltip();
+            animatedMarker
+              .bindTooltip(
+                `${k.split(":").pop()} - (${vt.n})<br>Destination: ${train.options.meta_stations[
+                  vt.tt[vt.tt.length - 1].i - 1
+                ]
+                  .split(":")[1]
+                  .split(".")
+                  .pop()} station, at ${vt.tt[vt.tt.length - 1].t}`
+              )
+              .openTooltip();
 
             trainref[vt.n] = animatedMarker;
             train_layer.addLayer(animatedMarker);
