@@ -3,6 +3,8 @@
 ## TODO
 
 - ☐ Support touch events! (or make it easier, if drag is too much work)
+- ☐ Add explanations of every setting (settings menu, popup menus)
+- ☐ Add a clock to main page or details on train popups so the time travel makes sense?
 - 🗹 Info button (show readme in a modal)
 - 🗹 Github button (link to repository)
 - 🗹 Clean unused libraries
