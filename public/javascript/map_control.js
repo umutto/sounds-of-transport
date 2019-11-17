@@ -55,8 +55,10 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
         }
       };
 
-      layer.setRadius(Math.pow(2, 19 - window.lf_map.getZoom()) * 10);
-      if (user_trigger && L.Browser.mobile) draw_toolbar._toolbars.edit._modes.edit.button.click();
+      if (user_trigger && L.Browser.mobile) {
+        layer.setRadius(Math.pow(2, 19 - window.lf_map.getZoom()) * 10);
+        draw_toolbar._toolbars.edit._modes.edit.button.click();
+      }
       break;
     case "rectangle":
       var popup = L.popup({
@@ -107,19 +109,19 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
         }
       };
 
-      console.log("b");
-      let map_bounds = Object.values(window.lf_map.getBounds()).map(b => Object.values(b));
-      let _n = map_bounds[0][0] - (map_bounds[0][0] - map_bounds[1][0]) / 3,
-        _s = map_bounds[1][0] + (map_bounds[0][0] - map_bounds[1][0]) / 3,
-        _w = map_bounds[0][1] - (map_bounds[0][1] - map_bounds[1][1]) / 4,
-        _e = map_bounds[1][1] + (map_bounds[0][1] - map_bounds[1][1]) / 4;
+      if (user_trigger && L.Browser.mobile) {
+        let map_bounds = Object.values(window.lf_map.getBounds()).map(b => Object.values(b));
+        let _n = map_bounds[0][0] - (map_bounds[0][0] - map_bounds[1][0]) / 3,
+          _s = map_bounds[1][0] + (map_bounds[0][0] - map_bounds[1][0]) / 3,
+          _w = map_bounds[0][1] - (map_bounds[0][1] - map_bounds[1][1]) / 4,
+          _e = map_bounds[1][1] + (map_bounds[0][1] - map_bounds[1][1]) / 4;
 
-      layer.setBounds([
-        [_n, _e],
-        [_s, _w]
-      ]);
-      // layer.setBounds();
-      if (user_trigger && L.Browser.mobile) draw_toolbar._toolbars.edit._modes.edit.button.click();
+        layer.setBounds([
+          [_n, _e],
+          [_s, _w]
+        ]);
+        draw_toolbar._toolbars.edit._modes.edit.button.click();
+      }
       break;
     case "polyline":
       var popup = L.popup({
@@ -142,7 +144,7 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
                 .map(l => l.getLatLngs()),
               v.getMarker().getLatLng()
             ).distance <
-              5 + window.speed_offset / 10
+              18 - window.lf_map.getZoom() + window.speed_offset / 10 / Math.max(1, 13 - window.lf_map.getZoom())
         ).length;
         let _triggered = layer.getPopup().options.meta_trigger;
 

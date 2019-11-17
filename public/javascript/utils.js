@@ -1,5 +1,11 @@
 import { draw_options } from "./map_control.js";
 
+var _oldhide = $.fn.hide;
+$.fn.hide = function(speed, callback) {
+  $(this).trigger("elem.hide");
+  return _oldhide.apply(this, arguments);
+};
+
 export function get_push_point(s, ns, angle, fraction = 100) {
   let _oX = ns.geo.long - s.geo.long,
     _oY = ns.geo.lat - s.geo.lat;

@@ -20,7 +20,15 @@ async function getConfig() {
 
 function date_updated(start, _, __) {
   window.offset_date = start.diff();
-  console.log(get_now());
+  $(".loading-overlay .spinner-text").text(
+    Math.sign(start.diff()) == -1
+      ? `Traveling back to ${start.fromNow()}...`
+      : `Traveling ${start
+          .fromNow()
+          .split(" ")
+          .slice(1)
+          .join(" ")} into the future...`
+  );
   reset_values();
 }
 
@@ -50,6 +58,11 @@ function reset_values(p_load = null) {
 }
 
 $(function() {
+  $(".loading-overlay").on("elem.hide", function() {
+    $(this)
+      .find(".spinner-text")
+      .text("Loading...");
+  });
   $("#btn-share").on("click", function() {
     let _c = compress();
     $("#input-share").val(_c.length < 2000 ? `${window.location.origin}${window.location.pathname}?s=${_c}` : _c);
@@ -188,8 +201,9 @@ async function init_map(mb_token, map_id, is_reset = false, comp_str = null) {
   $(".loading-overlay").hide();
 
   window.setInterval(function() {
+    window.trainref = {};
     draw_trains(interactive_map, time_tables);
-  }, 30000);
+  }, 60000);
 }
 
 function init_date_picker(cb) {
