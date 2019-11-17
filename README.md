@@ -3,7 +3,7 @@
 ## TODO
 
 - 🗹 Support touch events! (hacked to open the edit menu on leaflet draw for now)
-- ☐ Add explanations of every setting (settings menu, popup menus, did for settings, popup menu next...)
+- 🗹 Add explanations to settings menu
 - 🗹 Add a clock to main page or details on train popups so the time travel makes sense? (did train popups instead of a clock, seemed cleaner, use a popover on time setting instead of a clock)
 - 🗹 Info button (show readme in a modal)
 - 🗹 Github button (link to repository)
