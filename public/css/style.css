@@ -149,3 +149,7 @@ body {
   display: flex;
   justify-content: space-between;
 }
+
+[data-toggle="popover"] {
+  cursor: pointer;
+}
