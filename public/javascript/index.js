@@ -201,9 +201,10 @@ async function init_map(mb_token, map_id, is_reset = false, comp_str = null) {
   $(".loading-overlay").hide();
 
   window.setInterval(function() {
-    window.trainref = {};
-    draw_trains(interactive_map, time_tables);
-  }, 60000);
+    // window.trainref = {};
+    // draw_trains(interactive_map, time_tables);
+    reset_values(pre_load);
+  }, 30 * 60 * 1000);
 }
 
 function init_date_picker(cb) {
