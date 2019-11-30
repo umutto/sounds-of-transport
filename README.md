@@ -29,6 +29,12 @@
 - ☐ Fix Line offsetting, it seems like it fails after 2 intersections. For reference check Kanda station for Keihin tohoku and Chuo rapid line.
 - 🗹 Put all stations to the map (don't filter out the repetitions) and instead combine their circles with polygons and lines (just make a thick round line from one to another? or combine them into a polygon?)
 
+## How to use
+
+Check out the [introduction.md](INTRODUCTION.md) for more details on how it works, and how to use.
+
+[![Watch how to use on Youtube](http://img.youtube.com/vi/pF1QH1PXt1k/0.jpg)](http://www.youtube.com/watch?v=pF1QH1PXt1k "Watch how to use on Youtube")
+
 ## Audio references
 
 Audio used in this app is downloaded from following sources, thanks to all artists for sharing!
