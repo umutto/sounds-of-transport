@@ -439,10 +439,58 @@ const draw_lines = async (map, l_renderer, data) => {
   var lineref = {};
   var stationref = {};
   let lineLayer = L.featureGroup();
-  let stationLayer = L.featureGroup();
+  let stationLayer = L.markerClusterGroup({
+    animate: false,
+    zoomToBoundsOnClick: false,
+    polygonOptions: { weight: 1, color: "#000", opacity: 0.5 },
+    spiderLegPolylineOptions: { weight: 2, color: "#000", opacity: 0.7 },
+    // disableClusteringAtZoom: 16,
+    iconCreateFunction: function(cluster) {
+      var childCount = cluster.getChildCount();
+      let c_names = cluster.getAllChildMarkers().map(c => c.options.meta_name);
+      let stations = [...new Set(c_names.map(c => c.split(".").pop()))].join(", ");
+      let trains = [...new Set(c_names.map(c => c.split(".")[2]))].join(", ");
+      let repr_name = c_names
+        .map(c => c.split(".").pop())
+        .sort((a, b) => c_names.filter(v => v === a).length - c_names.filter(v => v === b).length)
+        .pop();
+
+      var c = " marker-cluster-";
+      if (childCount < 10) {
+        c += "small";
+      } else if (childCount < 100) {
+        c += "medium";
+      } else {
+        c += "large";
+      }
+
+      return new L.DivIcon({
+        html: `<div><span data-name="<b>(${stations}) Stations</b><br>Trains passing: ${trains}">(${
+          repr_name.split("")[0]
+        })</span></div>`,
+        className: "marker-cluster" + c,
+        iconSize: new L.Point(40, 40)
+      });
+    }
+  });
+
+  stationLayer
+    .on("clustermouseover", function(ev) {
+      ev.propagatedFrom
+        .bindTooltip(
+          `${$(ev.propagatedFrom._icon)
+            .find("span")
+            .data("name")}`,
+          { sticky: true }
+        )
+        .openTooltip();
+    })
+    .on("clustermouseout", function(ev) {
+      ev.propagatedFrom.unbindTooltip();
+    });
 
   // let offset_stations = [];
-  // let station_groups = {};
+  let station_groups = {};
   // let combinedStationLayer = L.featureGroup();
 
   lines.forEach(l => {
@@ -482,9 +530,10 @@ const draw_lines = async (map, l_renderer, data) => {
       }
 
       // if (!offset_stations.includes(s.title)) {
-      let c_radius = s.trains.length * 10 + 5;
+      // let c_radius = s.trains.length * 10 + 5;
+      let c_radius = 10;
 
-      let station = L.circle([s.geo.lat, s.geo.long], {
+      let station = L.circleMarker([s.geo.lat, s.geo.long], {
         parts: 4,
         weight: 2,
         fillColor: "#fdfdfd",
@@ -494,9 +543,9 @@ const draw_lines = async (map, l_renderer, data) => {
         meta_name: s.code,
         meta_duration: s.dur
       }).addTo(stationLayer);
-      station.bindTooltip(s.title + " Station").openTooltip();
+      station.bindTooltip(`(${s.code.split(".")[2]}) ${s.title} Station`).openTooltip();
 
-      // station_groups[s.title] = [...(station_groups[s.title] || []), { s: station, ns: ns }];
+      station_groups[s.title] = [...(station_groups[s.title] || []), s];
       stationref[s.code] = station;
 
       station.on("mouseover", function(e) {
@@ -547,18 +596,30 @@ const draw_lines = async (map, l_renderer, data) => {
   lineLayer.bringToBack();
 
   // Object.entries(station_groups).forEach(([k, v]) => {
-  //   L.geoJSON(turf.envelope(...v.map(s => s.toGeoJSON())), {
-  //     style: {
-  //       fillColor: "#fdfdfd",
-  //       color: "#000",
-  //       opacity: 1,
-  //       fillOpacity: 1,
-  //       meta_name: k
-  //     }
-  //   }).addTo(combinedStationLayer);
+  //   let latlngs = v.map(s => {
+  //     return [s.geo.lat, s.geo.long];
+  //   });
+  //   let connection = L.polyline(
+  //     latlngs.filter((p, i, s) => i === s.findIndex(_p => _p[0] == p[0] && _p[1] == p[1])),
+  //     { weight: 5, color: "#cecece", opacity: 0.5 }
+  //   ).addTo(stationLayer);
+  //   connection.bindTooltip(k + " Station").openTooltip();
   // });
-  // combinedStationLayer.addTo(map);
-  // combinedStationLayer.bringToFront();
+
+  // let station_connections = {};
+  // lines
+  //   .map(l => l.station)
+  //   .flat()
+  //   .filter(s => s.trains.length > 1)
+  //   .forEach(s => {
+  //     s.trains.forEach(t => {
+  //       let ref = `${s.code}->${t}`;
+  //       if (!(ref in station_connections)) {
+  //         station_connections[ref] = "a";
+  //       }
+  //     });
+  //     console.log(s);
+  //   });
 
   stationLayer.addTo(map);
   stationLayer.bringToFront();
@@ -672,7 +733,7 @@ const draw_trains = async (map, data) => {
                 ]
                   .split(":")[1]
                   .split(".")
-                  .pop()} station, at ${vt.tt[vt.tt.length - 1].t}`
+                  .pop()} station at ${vt.tt[vt.tt.length - 1].t}`
               )
               .openTooltip();
 
