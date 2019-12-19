@@ -407,7 +407,7 @@ const register_map_events = map => {
   });
 
   map.on(L.Draw.Event.DELETESTOP, function(e) {
-    if (!window.muted) mute_all(false);
+    if (window.muted) mute_all(false);
   });
 
   map.on(L.Draw.Event.DELETED, function(e) {

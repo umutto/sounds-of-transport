@@ -36,9 +36,10 @@ Due to the limited time I had on the challenge, I've decided to make something l
 
 I will try to make a more serious entry next year so be sure to check my [GitHub](https://github.com/umutto) if you're interested!
 
-````
+```
 The source of the public transportation data in this app, etc. is the Open Data Challenge for Public Transportation in Tokyo.
 They are based on the data provided by the public transportation operators. The accuracy and integrity of the data are not guaranteed. Please do not contact the public transportation operators directly regarding the content of the app.
 For inquiries on the app, please contact the following email address.
 umutkarakulak@hotmail.com
-````
+
+```
