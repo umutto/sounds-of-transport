@@ -41,4 +41,5 @@ The source of the public transportation data in this app, etc. is the Open Data 
 They are based on the data provided by the public transportation operators. The accuracy and integrity of the data are not guaranteed. Please do not contact the public transportation operators directly regarding the content of the app.
 For inquiries on the app, please contact the following email address.
 umutkarakulak@hotmail.com
+
 ```
