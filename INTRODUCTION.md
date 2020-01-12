@@ -1,3 +1,7 @@
+<p align="center">
+  <img width="600" height="600" src="public/logo.png">
+</p>
+
 # Sounds of Transport
 
 Sounds of Transport is a fun and interactive web app where a musical loop can be created using shapes and the intricate train system of Tokyo.
