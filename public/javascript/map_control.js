@@ -63,7 +63,7 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
     case "rectangle":
       var popup = L.popup({
         meta_volume: volume || 100,
-        meta_audio: audio || "kick_1",
+        meta_audio: audio || "funk_1",
         meta_interval: interval || 1000,
         meta_timestamp: get_now().getTime()
       }).setContent($("#rectangle-popup").html());
@@ -126,7 +126,7 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
     case "polyline":
       var popup = L.popup({
         meta_volume: volume || 100,
-        meta_audio: audio || "snare_1",
+        meta_audio: audio || "kick_1",
         meta_intersects: 0
       }).setContent($("#polyline-popup").html());
       layer.bindPopup(popup);
