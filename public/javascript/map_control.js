@@ -136,14 +136,7 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
         let _intersect = Object.entries(window.trainref).filter(
           ([k, v]) =>
             v &&
-            L.GeometryUtil.closest(
-              map,
-              editableLayers
-                .getLayers()
-                .filter(l => l.options.meta_type === "polyline")
-                .map(l => l.getLatLngs()),
-              v.getMarker().getLatLng()
-            ).distance <
+            L.GeometryUtil.closest(map, layer, v.getMarker().getLatLng()).distance <
               18 - window.lf_map.getZoom() + window.speed_offset / 10 / Math.max(1, 13 - window.lf_map.getZoom())
         ).length;
         let _triggered = layer.getPopup().options.meta_trigger;
