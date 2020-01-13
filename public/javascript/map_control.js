@@ -22,8 +22,8 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
   switch (type) {
     case "circle":
       var popup = L.popup({
-        meta_volume: volume || 100,
-        meta_audio: audio || "jazz_1",
+        meta_volume: volume || 75,
+        meta_audio: audio || "groovy_1",
         meta_type: type
       }).setContent($("#circle-popup").html());
       layer.bindPopup(popup);
@@ -62,8 +62,8 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
       break;
     case "rectangle":
       var popup = L.popup({
-        meta_volume: volume || 100,
-        meta_audio: audio || "kick_1",
+        meta_volume: volume || 50,
+        meta_audio: audio || "jazz_1",
         meta_interval: interval || 1000,
         meta_timestamp: get_now().getTime()
       }).setContent($("#rectangle-popup").html());
@@ -125,8 +125,8 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
       break;
     case "polyline":
       var popup = L.popup({
-        meta_volume: volume || 100,
-        meta_audio: audio || "snare_1",
+        meta_volume: volume || 50,
+        meta_audio: audio || "kick_1",
         meta_intersects: 0
       }).setContent($("#polyline-popup").html());
       layer.bindPopup(popup);
@@ -136,14 +136,7 @@ const draw_options = (map, layer, type, volume = null, audio = null, interval = 
         let _intersect = Object.entries(window.trainref).filter(
           ([k, v]) =>
             v &&
-            L.GeometryUtil.closest(
-              map,
-              editableLayers
-                .getLayers()
-                .filter(l => l.options.meta_type === "polyline")
-                .map(l => l.getLatLngs()),
-              v.getMarker().getLatLng()
-            ).distance <
+            L.GeometryUtil.closest(map, layer, v.getMarker().getLatLng()).distance <
               18 - window.lf_map.getZoom() + window.speed_offset / 10 / Math.max(1, 13 - window.lf_map.getZoom())
         ).length;
         let _triggered = layer.getPopup().options.meta_trigger;
