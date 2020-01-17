@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="709" height="287" src="public/logo.png">
+  <img style="max-width:700px; height:auto;" src="public/logo.png">
 </p>
 
 # Sounds of Transport
