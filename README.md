@@ -1,5 +1,13 @@
 # sounds-of-transport
 
+<p align="center">
+  <b>This project has been selected for the INIAD Special Award!!!🎉</b>
+  <br>
+  You can take a look at the award ceromony and other projects that have received awards using the link below
+  <br>
+  <a href="https://tokyochallenge.odpt.org/2019/award/07.html#v">Tokyo ODPT Challenge 2019 Awards</a>
+</p>
+
 ## TODO
 
 - 🗹 Support touch events! (hacked to open the edit menu on leaflet draw for now)
@@ -33,7 +41,7 @@
 
 Check out the [introduction.md](INTRODUCTION.md) for more details on how it works, and how to use.
 
-[![Watch how to use on Youtube](http://img.youtube.com/vi/pF1QH1PXt1k/0.jpg)](http://www.youtube.com/watch?v=pF1QH1PXt1k "Watch how to use on Youtube")
+[![Watch the introduction on Youtube](https://youtu.be/PETzwgZVYRE)](https://youtu.be/PETzwgZVYRE "Watch the introduction on Youtube")
 
 ## Audio references
 
