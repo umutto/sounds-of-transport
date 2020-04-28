@@ -1,3 +1,7 @@
+<p align="center">
+  <img style="max-width:700px; height:auto;" src="public/logo.png">
+</p>
+
 # sounds-of-transport
 
 <p align="center">
