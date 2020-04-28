@@ -45,7 +45,7 @@
 
 Check out the [introduction.md](INTRODUCTION.md) for more details on how it works, and how to use.
 
-[![Watch the introduction on Youtube](https://youtu.be/PETzwgZVYRE)](https://youtu.be/PETzwgZVYRE "Watch the introduction on Youtube")
+[![Watch the introduction on Youtube](https://img.youtube.com/vi/PETzwgZVYRE/0.jpg)](https://youtu.be/PETzwgZVYRE "Watch the introduction on Youtube")
 
 ## Audio references
 
