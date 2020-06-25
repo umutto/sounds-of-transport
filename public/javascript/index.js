@@ -7,12 +7,12 @@ window.muted = false;
 
 async function getConfig() {
   if (location.hostname == "localhost")
-    import("../../data/config/config.js").then(async cf => {
+    import("../../data/config/config.js").then(async (cf) => {
       window.api_conf = cf.default;
       init_map(cf.default.mapbox.value, "interactiveMap");
     });
   else
-    import("../../data/Public/config.js").then(async cf => {
+    import("../../data/Public/config.js").then(async (cf) => {
       window.api_conf = cf.default;
       init_map(cf.default.mapbox.value, "interactiveMap");
     });
@@ -23,26 +23,22 @@ function date_updated(start, _, __) {
   $(".loading-overlay .spinner-text").text(
     Math.sign(start.diff()) == -1
       ? `Traveling back to ${start.fromNow()}...`
-      : `Traveling ${start
-          .fromNow()
-          .split(" ")
-          .slice(1)
-          .join(" ")} into the future...`
+      : `Traveling ${start.fromNow().split(" ").slice(1).join(" ")} into the future...`
   );
   reset_values();
 }
 
 function reset_values(p_load = null) {
   $(".loading-overlay").show();
-  Object.values(window.trainref).forEach(l => {
+  Object.values(window.trainref).forEach((l) => {
     if (l) l.clearAllEventListeners();
   });
   window.trainref = {};
-  Object.values(window.stationref).forEach(l => {
+  Object.values(window.stationref).forEach((l) => {
     if (l) l.clearAllEventListeners();
   });
   window.stationref = {};
-  Object.values(window.lineref).forEach(l => {
+  Object.values(window.lineref).forEach((l) => {
     if (l) l.clearAllEventListeners();
   });
   window.editableLayers.clearAllEventListeners();
@@ -57,15 +53,17 @@ function reset_values(p_load = null) {
   init_map(window.api_conf.mapbox.value, "interactiveMap", true, p_load);
 }
 
-$(function() {
-  $(".loading-overlay").on("elem.hide", function() {
-    $(this)
-      .find(".spinner-text")
-      .text("Loading...");
+$(function () {
+  $(".loading-overlay").on("elem.hide", function () {
+    $(this).find(".spinner-text").text("Loading...");
   });
-  $("#btn-share").on("click", function() {
+  $("#btn-share").on("click", function () {
     let _c = compress();
-    $("#input-share").val(_c.length < 2000 ? `${window.location.origin}${window.location.pathname}?s=${_c}` : _c);
+    $("#input-share").val(
+      _c.length < 2000
+        ? `${window.location.origin}${window.location.pathname}?s=${_c}`
+        : _c
+    );
     $("#text-share-info").text(
       _c.length < 2000
         ? "You can copy and share the url below! Visitors will see your map!"
@@ -73,20 +71,24 @@ $(function() {
     );
   });
 
-  $("#input-share").popover({ content: "copied to clipboard!", trigger: "manual", placement: "top" });
+  $("#input-share").popover({
+    content: "copied to clipboard!",
+    trigger: "manual",
+    placement: "top",
+  });
   $('[data-toggle="popover"]').popover();
 
   new ClipboardJS("#copy-share");
-  $("#copy-share").on("click", function() {
+  $("#copy-share").on("click", function () {
     if ($("#input-share").val().length > 0) {
       $("#input-share").popover("show");
-      setTimeout(function() {
+      setTimeout(function () {
         $("#input-share").popover("hide");
       }, 1000);
     }
   });
 
-  $("#btn-load").on("click", function() {
+  $("#btn-load").on("click", function () {
     let load_s = $("#input-share").val();
     if (load_s.length > 0) reset_values(load_s);
   });
@@ -94,16 +96,16 @@ $(function() {
   window.station_filter = $("#stationFilter").slider({
     min: 0,
     max: 70,
-    value: [20, 60]
+    value: [20, 60],
   });
 
   init_date_picker(date_updated);
-  $(`button[name="dateReset"]`).on("click", function() {
+  $(`button[name="dateReset"]`).on("click", function () {
     window.offset_date = null;
     init_date_picker(date_updated);
   });
 
-  $(".modal #btn-filter").on("click", function() {
+  $(".modal #btn-filter").on("click", function () {
     reset_values();
   });
 
@@ -111,14 +113,15 @@ $(function() {
 
   // mobile friendly modals
   if (window.history && window.history.pushState) {
-    $(".modal").on("show.bs.modal", function(e) {
-      if (window.location.hash != "#modal") window.history.pushState("forward", null, "#modal");
+    $(".modal").on("show.bs.modal", function (e) {
+      if (window.location.hash != "#modal")
+        window.history.pushState("forward", null, "#modal");
     });
-    $(".modal").on("hide.bs.modal", function(e) {
+    $(".modal").on("hide.bs.modal", function (e) {
       if (window.location.hash == "#modal") window.history.back();
     });
 
-    $(window).on("popstate", function() {
+    $(window).on("popstate", function () {
       if (window.location.hash != "#modal") $(".modal").modal("hide");
     });
   }
@@ -134,21 +137,26 @@ async function init_map(mb_token, map_id, is_reset = false, comp_str = null) {
     center: [35.6762, 139.7503],
     zoom: 13,
     markerZoomAnimation: false,
-    zoomAnimation: false
+    zoomAnimation: false,
   });
   var l_renderer = L.canvas({
     padding: 0.5,
-    tolerance: 5
+    tolerance: 5,
   });
   window.lf_map = interactive_map;
 
-  L.tileLayer(`https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=${mb_token}`, {
-    attribution:
-      'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 18,
-    id: "mapbox.light",
-    accessToken: mb_token
-  }).addTo(interactive_map);
+  L.tileLayer(
+    `https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=${mb_token}`,
+    {
+      attribution:
+        'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      tileSize: 512,
+      zoomOffset: -1,
+      id: "mapbox/light-v10",
+      accessToken: mb_token,
+    }
+  ).addTo(interactive_map);
 
   var lines = await load_local_data("data/Public/line_station_coords.json");
   var line_colors = await load_local_data("data/Public/line_colors.json");
@@ -177,22 +185,19 @@ async function init_map(mb_token, map_id, is_reset = false, comp_str = null) {
     .toArray();
 
   lines = lines.filter(
-    l =>
+    (l) =>
       l.station.length >= min_station &&
       l.station.length <= max_station &&
-      valid_operators.includes(
-        l.code
-          .split(":")
-          .pop()
-          .split(".")[0]
-      )
+      valid_operators.includes(l.code.split(":").pop().split(".")[0])
   );
 
   await draw_lines(interactive_map, l_renderer, { lines, line_colors });
   await draw_controls(interactive_map);
 
   var time_tables = await load_local_data(
-    isHoliday ? "data/Public/train_timetable_holiday.json" : "data/Public/train_timetable_weekday.json"
+    isHoliday
+      ? "data/Public/train_timetable_holiday.json"
+      : "data/Public/train_timetable_weekday.json"
   );
   // var train_live = await load_live_data("odpt:Train", [`odpt:railway=odpt.Railway:JR-East.ChuoRapid`]);
   await draw_trains(interactive_map, time_tables);
@@ -200,7 +205,7 @@ async function init_map(mb_token, map_id, is_reset = false, comp_str = null) {
   if (pre_load) pre_load.f_draw();
   $(".loading-overlay").hide();
 
-  window.setInterval(function() {
+  window.setInterval(function () {
     // window.trainref = {};
     // draw_trains(interactive_map, time_tables);
     reset_values(pre_load);
@@ -216,10 +221,10 @@ function init_date_picker(cb) {
       timePicker24Hour: true,
       drops: "up",
       locale: {
-        format: "DD/MM/YY HH:mm"
+        format: "DD/MM/YY HH:mm",
       },
       opens: "center",
-      startDate: moment().format("DD/MM/YY HH:mm")
+      startDate: moment().format("DD/MM/YY HH:mm"),
     },
     cb
   );
