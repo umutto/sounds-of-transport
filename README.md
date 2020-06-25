@@ -28,6 +28,8 @@
 - 🗹 Add a way to save and recover creations
 - ☐ Add a way to upload (or at least link) custom audio
 
+- ☐ Add an audio visualizer.
+
 - ☐ Finalize periodic redraws (update trains in trainref instead of redrawing)
 
 - 🗹 Also clean the shapes and audios when reset. (currently breaking all)
